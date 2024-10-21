@@ -34,7 +34,7 @@ const Navbar = () => {
             <AvatarImage src="https://i.seadn.io/gae/jCQAQBNKmnS_AZ_2jTqBgBLIVYaRFxLX6COWo-HCHrYJ1cg04oBgDfHvOmpqsWbmUaSfBDHIdrwKtGnte3Ph_VwQPJYJ6VFtAf5B?auto=format&dpr=1&w=1000"></AvatarImage>
           </Avatar>
           <p className="text-sm font-bold flex flex-col">
-            <span className="text-lg font-light">WELCOME,</span> John Doe
+            <span className="text-lg font-light">WELCOME</span> John Doe
           </p>
         </div>
       </div>
