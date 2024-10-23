@@ -141,12 +141,6 @@ const Navbar: React.FC = () => {
           isCollapsed={isCollapsed}
         />
         <NavButton
-          href="/courses"
-          icon={BookOpen}
-          text="COURSES"
-          isCollapsed={isCollapsed}
-        />
-        <NavButton
           href="/messages"
           icon={MessageSquare}
           text="MESSAGES"

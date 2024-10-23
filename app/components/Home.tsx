@@ -33,7 +33,7 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
 }) => (
   <Button
     variant="outline"
-    className="h-24 flex-1 flex flex-col items-center justify-center gap-2 min-w-[150px] bg-neutral-100 hover:bg-neutral-200 text-black"
+    className="h-24 flex-1 flex flex-col items-center justify-center gap-2 min-w-[150px] bg-white hover:bg-neutral-200 text-black"
     onClick={onClick}
   >
     <Icon className="h-6 w-6" />
@@ -43,37 +43,17 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
 
 // Sample data for the Overview chart
 const overviewData = [
-  {
-    name: "Jan",
-    attendance: 234,
-    grades: 164,
-  },
-  {
-    name: "Feb",
-    attendance: 278,
-    grades: 196,
-  },
-  {
-    name: "Mar",
-    attendance: 264,
-    grades: 162,
-  },
-  {
-    name: "Apr",
-    attendance: 308,
-    grades: 191,
-  },
-  {
-    name: "May",
-    attendance: 289,
-    grades: 182,
-  },
+  { name: "Jan", attendance: 95, grades: 8.5 },
+  { name: "Feb", attendance: 92, grades: 7.8 },
+  { name: "Mar", attendance: 88, grades: 8.2 },
+  { name: "Apr", attendance: 90, grades: 8.7 },
+  { name: "May", attendance: 85, grades: 7.9 },
 ];
 
 const StaffDashboard = () => (
   <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Total Students</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -82,10 +62,10 @@ const StaffDashboard = () => (
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold">280</div>
-          <p className="text-sm text-green-500">↑ 12.5% from last month</p>
+          <p className="text-sm text-emerald-600">↑ 12.5% from last month</p>
         </CardContent>
       </Card>
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Average Attendance</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -94,10 +74,10 @@ const StaffDashboard = () => (
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold">95%</div>
-          <p className="text-sm text-green-500">↑ 2.3% from last semester</p>
+          <p className="text-sm text-emerald-600">↑ 2.3% from last semester</p>
         </CardContent>
       </Card>
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Pending Tasks</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -119,7 +99,7 @@ const StaffDashboard = () => (
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-      <Card className="col-span-4 bg-neutral-100 text-black">
+      <Card className="col-span-4 bg-white text-black">
         <CardHeader>
           <CardTitle>Overview</CardTitle>
         </CardHeader>
@@ -127,7 +107,7 @@ const StaffDashboard = () => (
           <Overview data={overviewData} />
         </CardContent>
       </Card>
-      <Card className="col-span-3 bg-neutral-100 text-black">
+      <Card className="col-span-3 bg-white text-black">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -145,7 +125,7 @@ const StaffDashboard = () => (
 const StudentDashboard = () => (
   <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Attendance Rate</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -154,10 +134,10 @@ const StudentDashboard = () => (
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold">96%</div>
-          <p className="text-sm text-green-500">Above class average</p>
+          <p className="text-sm text-emerald-600">Above class average</p>
         </CardContent>
       </Card>
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Current Grades</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -166,10 +146,10 @@ const StudentDashboard = () => (
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold">A</div>
-          <p className="text-sm text-green-500">Top 5% of class</p>
+          <p className="text-sm text-emerald-600">Top 5% of class</p>
         </CardContent>
       </Card>
-      <Card className="bg-neutral-100 text-black">
+      <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Upcoming Tasks</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -191,7 +171,7 @@ const StudentDashboard = () => (
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-7 gap-4 ">
-      <Card className="col-span-4 bg-neutral-100 text-black">
+      <Card className="col-span-4 bg-white text-black">
         <CardHeader>
           <CardTitle>Performance Overview</CardTitle>
         </CardHeader>
@@ -199,7 +179,7 @@ const StudentDashboard = () => (
           <Overview data={overviewData} />
         </CardContent>
       </Card>
-      <Card className="col-span-3 bg-neutral-100 text-black">
+      <Card className="col-span-3 bg-white text-black">
         <CardHeader>
           <CardTitle>Recent Updates</CardTitle>
           <CardDescription className="text-neutral-400">

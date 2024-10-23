@@ -18,7 +18,7 @@ export function RecentSales() {
             Submitted Assignment: React Basics
           </p>
         </div>
-        <div className="ml-auto font-medium text-green-500">+12 pts</div>
+        <div className="ml-auto font-medium text-emerald-600">+12 pts</div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -31,7 +31,7 @@ export function RecentSales() {
           </p>
           <p className="text-sm text-neutral-400">Completed Quiz: JavaScript</p>
         </div>
-        <div className="ml-auto font-medium text-green-500">+15 pts</div>
+        <div className="ml-auto font-medium text-emerald-600">+15 pts</div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -46,7 +46,7 @@ export function RecentSales() {
             Joined Live Session: Data Structures
           </p>
         </div>
-        <div className="ml-auto font-medium text-green-500">+5 pts</div>
+        <div className="ml-auto font-medium text-emerald-600">+5 pts</div>
       </div>
       <div className="flex items-center">
         <Avatar className="h-9 w-9">
@@ -61,7 +61,7 @@ export function RecentSales() {
             Posted in Forum: Web Design Tips
           </p>
         </div>
-        <div className="ml-auto font-medium text-green-500">+8 pts</div>
+        <div className="ml-auto font-medium text-emerald-600">+8 pts</div>
       </div>
     </div>
   );
