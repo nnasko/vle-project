@@ -93,13 +93,16 @@ const Navbar: React.FC = () => {
               variant="ghost"
               size="icon"
               className="bg-[#473BF0] rounded-full w-6 h-6 p-1 hover:bg-[#372BDD]"
+              asChild
             >
-              <Bell className="text-white w-4 h-4" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
+              <Link href="/notifications">
+                <Bell className="text-white w-4 h-4" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
             </Button>
           </div>
         </div>
