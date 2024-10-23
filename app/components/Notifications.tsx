@@ -130,9 +130,9 @@ export default function Notifications() {
   };
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="p-6 min-h-screen ">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 ">
           <h1 className="text-2xl font-bold">NOTIFICATIONS</h1>
           <Button onClick={markAllAsRead} className="bg-main hover:bg-second">
             <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -140,7 +140,7 @@ export default function Notifications() {
           </Button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 bg-neutral-700 p-6 rounded-lg">
           <div className="flex gap-4 mb-6">
             <Select
               value={filter}

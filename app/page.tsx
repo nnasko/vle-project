@@ -1,5 +1,12 @@
 import React from "react";
+import Home from "./components/Home";
 
-export default function Home() {
-  return <div className="grid-cols-4"></div>;
-}
+const page = () => {
+  return (
+    <div>
+      <Home />
+    </div>
+  );
+};
+
+export default page;
