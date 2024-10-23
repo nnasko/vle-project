@@ -8,7 +8,7 @@ import {
   Users,
   GraduationCap,
   CalendarDays,
-  BookOpen,
+  BookOpenCheck,
   MessageSquare,
   FileText,
   Settings,
@@ -144,6 +144,12 @@ const Navbar: React.FC = () => {
           href="/messages"
           icon={MessageSquare}
           text="MESSAGES"
+          isCollapsed={isCollapsed}
+        />
+        <NavButton
+          href="/lessons"
+          icon={BookOpenCheck}
+          text="LESSONS"
           isCollapsed={isCollapsed}
         />
         <NavButton
