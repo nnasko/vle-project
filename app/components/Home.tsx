@@ -16,9 +16,21 @@ import {
   Users,
   BellRing,
   MessageSquare,
+  Building2,
+  UserCog,
+  GraduationCap,
+  BarChart3,
+  Settings,
 } from "lucide-react";
 import { Overview } from "./charts/Overview";
 import { RecentSales } from "./charts/RecentSales";
+import {
+  SelectContent,
+  SelectTrigger,
+  Select,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface QuickActionButtonProps {
   icon: React.ElementType;
@@ -49,6 +61,175 @@ const overviewData = [
   { name: "Apr", attendance: 90, grades: 8.7 },
   { name: "May", attendance: 85, grades: 7.9 },
 ];
+
+const AdminDashboard = () => (
+  <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card className="bg-white text-black">
+        <CardHeader>
+          <CardTitle>Total Students</CardTitle>
+          <CardDescription className="text-neutral-400">
+            Across all departments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-4xl font-bold">1,245</div>
+          <p className="text-sm text-emerald-600">↑ 8.2% from last year</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-white text-black">
+        <CardHeader>
+          <CardTitle>Total Staff</CardTitle>
+          <CardDescription className="text-neutral-400">
+            Academic & Support
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-4xl font-bold">142</div>
+          <p className="text-sm text-emerald-600">↑ 3 new this month</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-white text-black">
+        <CardHeader>
+          <CardTitle>Departments</CardTitle>
+          <CardDescription className="text-neutral-400">
+            Active departments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-4xl font-bold">8</div>
+          <p className="text-sm text-emerald-600">All performing well</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-white text-black">
+        <CardHeader>
+          <CardTitle>Revenue</CardTitle>
+          <CardDescription className="text-neutral-400">
+            This academic year
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-4xl font-bold">£2.4M</div>
+          <p className="text-sm text-emerald-600">↑ 12.5% from last year</p>
+        </CardContent>
+      </Card>
+    </div>
+
+    <div className="flex flex-wrap gap-4">
+      <QuickActionButton icon={Building2} label="Departments" />
+      <QuickActionButton icon={UserCog} label="Manage Staff" />
+      <QuickActionButton icon={GraduationCap} label="Students" />
+      <QuickActionButton icon={BarChart3} label="Analytics" />
+      <QuickActionButton icon={Settings} label="Settings" />
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <Card className="col-span-4 bg-white text-black">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Institutional Overview</CardTitle>
+          <Select defaultValue="year">
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="year">This Year</SelectItem>
+              <SelectItem value="semester">This Semester</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <Overview
+            data={[
+              { name: "Computing", students: 350, performance: 87 },
+              { name: "Engineering", students: 280, performance: 82 },
+              { name: "Business", students: 420, performance: 85 },
+              { name: "Science", students: 195, performance: 89 },
+            ]}
+          />
+        </CardContent>
+      </Card>
+      <div className="col-span-3 space-y-4">
+        <Card className="bg-white text-black">
+          <CardHeader>
+            <CardTitle>Department Performance</CardTitle>
+            <CardDescription className="text-neutral-400">
+              Top performing departments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { name: "Computer Science", progress: 96 },
+                { name: "Data Science", progress: 94 },
+                { name: "Cyber Security", progress: 92 },
+                { name: "Software Engineering", progress: 90 },
+              ].map((dept) => (
+                <div key={dept.name} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">{dept.name}</p>
+                    <p className="text-sm text-gray-500">{dept.progress}%</p>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100">
+                    <div
+                      className="h-2 rounded-full bg-[#473BF0]"
+                      style={{ width: `${dept.progress}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white text-black">
+          <CardHeader>
+            <CardTitle>Recent Updates</CardTitle>
+            <CardDescription className="text-neutral-400">
+              Latest administrative changes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                {
+                  action: "New department head appointed",
+                  department: "Computer Science",
+                  date: "2 hours ago",
+                },
+                {
+                  action: "Course curriculum updated",
+                  department: "Data Science",
+                  date: "5 hours ago",
+                },
+                {
+                  action: "Staff training completed",
+                  department: "All Departments",
+                  date: "1 day ago",
+                },
+                {
+                  action: "New equipment approved",
+                  department: "Engineering",
+                  date: "2 days ago",
+                },
+              ].map((update, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{update.action}</p>
+                    <p className="text-xs text-gray-500">{update.department}</p>
+                  </div>
+                  <span className="text-xs text-gray-500">{update.date}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </div>
+);
 
 const StaffDashboard = () => (
   <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
@@ -193,9 +374,21 @@ const StudentDashboard = () => (
     </div>
   </div>
 );
-
 const Home = () => {
-  const userRole = "staff"; // or "student"
+  const userRole = "admin"; // "staff" or "student" or "admin"
+
+  const getName = () => {
+    switch (userRole) {
+      case "admin":
+        return "Administrator";
+      case "staff":
+        return "Dr. Smith";
+      case "student":
+        return "John";
+      default:
+        return "User";
+    }
+  };
 
   return (
     <div className="mt-2 bg-white min-h-screen">
@@ -203,7 +396,7 @@ const Home = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-black">
-              Welcome back, {userRole === "staff" ? "Dr. Smith" : "John"}
+              Welcome back, {getName()}
             </h1>
             <p className="text-neutral-400">
               Here&apos;s what&apos;s happening today
@@ -215,7 +408,13 @@ const Home = () => {
           </Button>
         </div>
 
-        {userRole === "staff" ? <StaffDashboard /> : <StudentDashboard />}
+        {userRole === "admin" ? (
+          <AdminDashboard />
+        ) : userRole === "staff" ? (
+          <StaffDashboard />
+        ) : (
+          <StudentDashboard />
+        )}
       </div>
     </div>
   );

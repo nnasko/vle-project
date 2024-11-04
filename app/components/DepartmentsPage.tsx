@@ -217,7 +217,7 @@ const DepartmentsPage = () => {
           </Sheet>
         </div>
 
-        <div className="bg-neutral-800 p-8 rounded-lg">
+        <div className="bg-neutral-700 p-8 rounded-lg">
           <div className="flex gap-4 mb-6">
             <Input
               placeholder="Search departments..."
