@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import EmptyStudents from "./EmptyStudents";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -13,27 +11,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
+import StudentDialog from "./StudentDialog";
 
-interface Log {
+// Common interfaces
+export interface Log {
   date: string;
   type: string;
   staff: string;
   comment: string;
 }
 
-interface Student {
+export interface Student {
   id: number;
   name: string;
   course: string;
@@ -41,32 +30,222 @@ interface Student {
   email: string;
   phone: string;
   studentId: string;
-  status: string;
+  status: "active" | "on-leave" | "withdrawn" | "graduated";
   enrollmentDate: string;
   expectedGraduation: string;
+  academicYear: number;
   logs: Log[];
 }
 
-interface ExpandedSections {
-  personal: boolean;
-  academic: boolean;
-  logs: boolean;
+interface ViewProps {
+  student: Student;
+  onAddLog: (id: number) => void;
+  onUpdate: (data: Student) => void;
+  expandedStudent: number | null;
+  existingIds: string[];
 }
 
-interface SectionHeaderProps {
-  title: string;
-  isExpanded: boolean;
-  onToggle: () => void;
+export type CreateStudent = Omit<Student, "id"> & { id?: number };
+
+interface ViewProps {
+  student: Student;
+  onAddLog: (id: number) => void;
+  onUpdate: (data: Student) => void;
+  expandedStudent: number | null;
+  existingIds: string[];
 }
+
+const StudentCard: React.FC<ViewProps> = ({
+  student,
+  onAddLog,
+  onUpdate,
+  expandedStudent,
+  existingIds,
+}) => (
+  <Card className="p-4 bg-neutral-100">
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 border border-neutral-700">
+            <AvatarImage src={student.avatar} alt={student.name} />
+            <AvatarFallback className="text-lg bg-neutral-100 text-black">
+              {student.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-semibold text-base text-black">
+              {student.name}
+            </div>
+            <div className="text-sm text-neutral-400">{student.course}</div>
+            <div className="text-sm text-neutral-500">{student.studentId}</div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <StudentDialog
+            mode="edit"
+            student={student}
+            existingIds={existingIds}
+            onSubmit={onUpdate}
+            expandedSections={{
+              personal: false,
+              academic: false,
+              logs: true,
+            }}
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-main text-white hover:bg-second h-9 px-3 min-w-[90px]"
+                onClick={() => onAddLog(student.id)}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Log
+              </Button>
+            }
+          />
+          <StudentDialog
+            mode="edit"
+            student={student}
+            existingIds={existingIds}
+            onSubmit={onUpdate}
+            expandedSections={{
+              personal: true,
+              academic: true,
+              logs: false,
+            }}
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-main text-white hover:bg-second h-9 px-3 min-w-[90px]"
+              >
+                Edit
+              </Button>
+            }
+          />
+        </div>
+      </div>
+      {student.logs.length > 0 && (
+        <div className="text-sm text-neutral-700 bg-neutral-100 p-3 rounded border-2 border-neutral-300">
+          Latest: {student.logs[0].comment}
+        </div>
+      )}
+    </div>
+  </Card>
+);
+
+const StudentRow: React.FC<ViewProps> = ({
+  student,
+  onAddLog,
+  onUpdate,
+  expandedStudent,
+  existingIds,
+}) => (
+  <Card className="p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-6">
+        <Avatar className="h-12 w-12 border border-neutral-700">
+          <AvatarImage src={student.avatar} alt={student.name} />
+          <AvatarFallback className="text-lg bg-neutral-100 text-black">
+            {student.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
+          </AvatarFallback>
+        </Avatar>
+        <div className="grid grid-cols-4 gap-8 min-w-[600px]">
+          <div>
+            <div className="font-semibold text-base text-black">
+              {student.name}
+            </div>
+            <div className="text-sm text-neutral-500">{student.studentId}</div>
+          </div>
+          <div>
+            <div className="text-sm text-neutral-400">{student.course}</div>
+            <div className="text-sm text-neutral-500 capitalize">
+              {student.status}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-neutral-400">{student.email}</div>
+            <div className="text-sm text-neutral-500">{student.phone}</div>
+          </div>
+          <div>
+            <div className="text-sm text-neutral-400">
+              Enrolled: {new Date(student.enrollmentDate).toLocaleDateString()}
+            </div>
+            <div className="text-sm text-neutral-500">
+              {student.logs.length} log entries
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <StudentDialog
+          mode="edit"
+          student={student}
+          existingIds={existingIds}
+          onSubmit={onUpdate}
+          expandedSections={{
+            personal: false,
+            academic: false,
+            logs: true,
+          }}
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-main text-white hover:bg-second h-9 px-3 min-w-[90px]"
+              onClick={() => onAddLog(student.id)}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Log
+            </Button>
+          }
+        />
+        <StudentDialog
+          mode="edit"
+          student={student}
+          existingIds={existingIds}
+          onSubmit={onUpdate}
+          expandedSections={{
+            personal: true,
+            academic: true,
+            logs: false,
+          }}
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-main text-white hover:bg-second h-9 px-3 min-w-[90px]"
+            >
+              Edit
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  </Card>
+);
+
+const COURSE_OPTIONS = [
+  { label: "All Courses", value: "all" },
+  { label: "Software Development", value: "Software Development" },
+  { label: "Web Design", value: "Web Design" },
+  { label: "Data Science", value: "Data Science" },
+] as const;
 
 const Students: React.FC = () => {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
-    personal: false,
-    academic: false,
-    logs: true,
-  });
+  const currentYear = new Date().getFullYear();
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [expandedStudent, setExpandedStudent] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState<string>("all");
 
-  const students = [
+  const [students, setStudents] = useState<Student[]>([
     {
       id: 1,
       name: "Atanas Kyurkchiev",
@@ -78,6 +257,7 @@ const Students: React.FC = () => {
       status: "active",
       enrollmentDate: "2024-01-15",
       expectedGraduation: "2025-12-20",
+      academicYear: currentYear,
       logs: [
         {
           date: "2024-03-15",
@@ -104,6 +284,7 @@ const Students: React.FC = () => {
       status: "active",
       enrollmentDate: "2024-01-15",
       expectedGraduation: "2025-12-20",
+      academicYear: currentYear,
       logs: [
         {
           date: "2024-03-10",
@@ -124,6 +305,7 @@ const Students: React.FC = () => {
       status: "on-leave",
       enrollmentDate: "2024-01-15",
       expectedGraduation: "2025-12-20",
+      academicYear: currentYear,
       logs: [
         {
           date: "2024-03-01",
@@ -150,6 +332,7 @@ const Students: React.FC = () => {
       status: "active",
       enrollmentDate: "2024-01-15",
       expectedGraduation: "2025-12-20",
+      academicYear: currentYear,
       logs: [
         {
           date: "2024-03-12",
@@ -170,6 +353,7 @@ const Students: React.FC = () => {
       status: "active",
       enrollmentDate: "2024-01-15",
       expectedGraduation: "2025-12-20",
+      academicYear: currentYear,
       logs: [
         {
           date: "2024-03-08",
@@ -179,422 +363,143 @@ const Students: React.FC = () => {
         },
       ],
     },
-  ];
+  ]);
 
-  const toggleSection = (section: keyof ExpandedSections) => {
-    setExpandedSections(
-      (prev: ExpandedSections): ExpandedSections => ({
-        personal: section === "personal" ? !prev.personal : prev.personal,
-        academic: section === "academic" ? !prev.academic : prev.academic,
-        logs: section === "logs" ? !prev.logs : prev.logs,
-      })
-    );
+  const handleCreateStudent = (studentData: CreateStudent) => {
+    const newStudent: Student = {
+      ...studentData,
+      id: students.length + 1,
+      avatar: "/api/placeholder/32/32",
+      logs: studentData.logs || [],
+    };
+    setStudents((prev) => [newStudent, ...prev]);
   };
 
-  const SectionHeader: React.FC<SectionHeaderProps> = ({
-    title,
-    isExpanded,
-    onToggle,
-  }) => (
-    <div
-      className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-100 rounded-md px-2"
-      onClick={onToggle}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onToggle();
-        }
-      }}
-    >
-      <h3 className="font-medium">{title}</h3>
-      {isExpanded ? (
-        <ChevronUp className="w-4 h-4" />
-      ) : (
-        <ChevronDown className="w-4 h-4" />
-      )}
-    </div>
-  );
+  const handleUpdateStudent = (studentData: Student) => {
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === studentData.id ? { ...student, ...studentData } : student
+      )
+    );
+    setExpandedStudent(null);
+  };
+
+  const handleAddLog = (studentId: number) => {
+    setExpandedStudent(studentId);
+  };
+
+  const existingIds = students.map((student) => student.studentId);
+
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch = student.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCourse =
+      selectedCourse === "all" || student.course === selectedCourse;
+    return matchesSearch && matchesCourse;
+  });
 
   return (
     <div className="p-6 min-h-screen">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">MANAGE STUDENTS</h1>
-          <Button className="bg-main hover:bg-second">CREATE</Button>
+          <h1 className="text-2xl font-bold text-white">MANAGE STUDENTS</h1>
+          <StudentDialog
+            mode="create"
+            existingIds={existingIds}
+            onSubmit={handleCreateStudent}
+          />
         </div>
 
         <div className="bg-neutral-700 p-8 rounded-lg">
           <div className="flex gap-4 mb-6">
-            <Input placeholder="Enter your search..." className="max-w-md" />
-            <Select>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Course" />
+            <Input
+              placeholder="Search students..."
+              className="max-w-md"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Select course" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="software-development">
-                  Software Development
-                </SelectItem>
-                <SelectItem value="web-design">Web Design</SelectItem>
-                <SelectItem value="data-science">Data Science</SelectItem>
+                {COURSE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className={
+                  viewMode === "grid" ? "bg-second text-white" : "text-black"
+                }
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className={
+                  viewMode === "list" ? "bg-second text-white" : "text-black"
+                }
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
-          {students.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-4">
-              {students.map((student) => (
-                <Card key={student.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={student.avatar} alt={student.name} />
-                        <AvatarFallback>
-                          {student.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-semibold">{student.name}</div>
-                        <div className="text-sm text-gray-600">
-                          {student.course}
-                        </div>
-                      </div>
-                    </div>
-                    <Sheet>
-                      <SheetTrigger>
-                        <Button
-                          variant="outline"
-                          className="bg-main text-white hover:bg-second"
-                        >
-                          EDIT
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent className="overflow-y-auto">
-                        <SheetHeader>
-                          <SheetTitle>Edit Student Profile</SheetTitle>
-                          <SheetDescription>
-                            Update student information and academic status.
-                          </SheetDescription>
-                        </SheetHeader>
+          <div className="space-y-4">
+            {viewMode === "grid" ? (
+              <div className="grid md:grid-cols-2 gap-4">
+                {filteredStudents.map((student) => (
+                  <StudentCard
+                    key={student.id}
+                    student={student}
+                    onAddLog={handleAddLog}
+                    onUpdate={handleUpdateStudent}
+                    expandedStudent={expandedStudent}
+                    existingIds={existingIds}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredStudents.map((student) => (
+                  <StudentRow
+                    key={student.id}
+                    student={student}
+                    onAddLog={handleAddLog}
+                    onUpdate={handleUpdateStudent}
+                    expandedStudent={expandedStudent}
+                    existingIds={existingIds}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-                        <div className="grid gap-4 py-4">
-                          {/* Personal Information Section */}
-                          <div className="border rounded-md p-2">
-                            <SectionHeader
-                              title="Personal Information"
-                              isExpanded={expandedSections.personal}
-                              onToggle={() => toggleSection("personal")}
-                            />
-                            {expandedSections.personal && (
-                              <div className="space-y-4 mt-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="firstName"
-                                    className="text-right"
-                                  >
-                                    First Name
-                                  </Label>
-                                  <Input
-                                    id="firstName"
-                                    className="col-span-3"
-                                    defaultValue={student.name.split(" ")[0]}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="lastName"
-                                    className="text-right"
-                                  >
-                                    Last Name
-                                  </Label>
-                                  <Input
-                                    id="lastName"
-                                    className="col-span-3"
-                                    defaultValue={student.name.split(" ")[1]}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="email" className="text-right">
-                                    Email
-                                  </Label>
-                                  <Input
-                                    id="email"
-                                    type="email"
-                                    className="col-span-3"
-                                    defaultValue={student.email}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="phone" className="text-right">
-                                    Phone
-                                  </Label>
-                                  <Input
-                                    id="phone"
-                                    type="tel"
-                                    className="col-span-3"
-                                    defaultValue={student.phone}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Academic Information Section */}
-                          <div className="border rounded-md p-2">
-                            <SectionHeader
-                              title="Academic Information"
-                              isExpanded={expandedSections.academic}
-                              onToggle={() => toggleSection("academic")}
-                            />
-                            {expandedSections.academic && (
-                              <div className="space-y-4 mt-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="studentId"
-                                    className="text-right"
-                                  >
-                                    Student ID
-                                  </Label>
-                                  <Input
-                                    id="studentId"
-                                    className="col-span-3"
-                                    defaultValue={student.studentId}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="course"
-                                    className="text-right"
-                                  >
-                                    Course
-                                  </Label>
-                                  <div className="col-span-3">
-                                    <Select
-                                      defaultValue={student.course
-                                        .toLowerCase()
-                                        .replace(" ", "-")}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="software-development">
-                                          Software Development
-                                        </SelectItem>
-                                        <SelectItem value="web-design">
-                                          Web Design
-                                        </SelectItem>
-                                        <SelectItem value="data-science">
-                                          Data Science
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="status"
-                                    className="text-right"
-                                  >
-                                    Status
-                                  </Label>
-                                  <div className="col-span-3">
-                                    <Select defaultValue={student.status}>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="active">
-                                          Active
-                                        </SelectItem>
-                                        <SelectItem value="on-leave">
-                                          On Leave
-                                        </SelectItem>
-                                        <SelectItem value="withdrawn">
-                                          Withdrawn
-                                        </SelectItem>
-                                        <SelectItem value="graduated">
-                                          Graduated
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="enrollmentDate"
-                                    className="text-right"
-                                  >
-                                    Enrollment Date
-                                  </Label>
-                                  <Input
-                                    id="enrollmentDate"
-                                    type="date"
-                                    className="col-span-3"
-                                    defaultValue={student.enrollmentDate}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label
-                                    htmlFor="expectedGraduation"
-                                    className="text-right"
-                                  >
-                                    Expected Graduation
-                                  </Label>
-                                  <Input
-                                    id="expectedGraduation"
-                                    type="date"
-                                    className="col-span-3"
-                                    defaultValue={student.expectedGraduation}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Logging Section */}
-                          <div className="border rounded-md p-2">
-                            <SectionHeader
-                              title="Activity Logs"
-                              isExpanded={expandedSections.logs}
-                              onToggle={() => toggleSection("logs")}
-                            />
-                            {expandedSections.logs && (
-                              <div className="space-y-4 mt-4">
-                                {/* New Log Entry Form */}
-                                <div className="grid gap-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label>Date</Label>
-                                      <Input type="date" className="mt-1" />
-                                    </div>
-                                    <div>
-                                      <Label>Log Type</Label>
-                                      <Select>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="academic-review">
-                                            Academic Review
-                                          </SelectItem>
-                                          <SelectItem value="attendance">
-                                            Attendance
-                                          </SelectItem>
-                                          <SelectItem value="behavior">
-                                            Behavior
-                                          </SelectItem>
-                                          <SelectItem value="counseling">
-                                            Counseling
-                                          </SelectItem>
-                                          <SelectItem value="other">
-                                            Other
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <Label>Staff Involved</Label>
-                                    <Select>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select staff" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="dr-smith">
-                                          Dr. Smith
-                                        </SelectItem>
-                                        <SelectItem value="prof-jones">
-                                          Prof. Jones
-                                        </SelectItem>
-                                        <SelectItem value="mrs-wilson">
-                                          Mrs. Wilson
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-
-                                  <div>
-                                    <Label>Comments</Label>
-                                    <textarea
-                                      className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 mt-1"
-                                      placeholder="Add any relevant comments..."
-                                    />
-                                  </div>
-
-                                  <Button className="w-full">
-                                    Add Log Entry
-                                  </Button>
-                                </div>
-                                {/* Previous Logs */}
-                                <div className="space-y-2 mt-6">
-                                  <h4 className="font-medium text-gray-700">
-                                    Previous Logs
-                                  </h4>
-                                  <div className="max-h-64 overflow-y-auto space-y-3">
-                                    {student.logs?.map((log, index) => (
-                                      <div
-                                        key={index}
-                                        className="border rounded-md p-3 bg-gray-50"
-                                      >
-                                        <div className="flex justify-between text-sm mb-1">
-                                          <span className="font-medium text-gray-900">
-                                            {log.type}
-                                          </span>
-                                          <span className="text-gray-500">
-                                            {log.date}
-                                          </span>
-                                        </div>
-                                        <div className="text-sm text-gray-600 mb-1">
-                                          Staff: {log.staff}
-                                        </div>
-                                        <div className="text-sm text-gray-700 bg-white p-2 rounded">
-                                          {log.comment}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <SheetFooter>
-                          <SheetClose asChild>
-                            <Button
-                              type="submit"
-                              className="bg-main hover:bg-second"
-                            >
-                              Save Changes
-                            </Button>
-                          </SheetClose>
-                        </SheetFooter>
-                      </SheetContent>
-                    </Sheet>
-                  </div>
-                </Card>
+          {filteredStudents.length > 0 && (
+            <div className="flex justify-center gap-2 mt-6">
+              {[1, 2, 3, 4, 5].map((page) => (
+                <Button
+                  key={page}
+                  variant={page === 1 ? "default" : "outline"}
+                  className={`w-8 h-8 p-0 ${
+                    page === 1 ? "bg-second text-white" : "text-black"
+                  }`}
+                >
+                  {page}
+                </Button>
               ))}
             </div>
-          ) : (
-            <EmptyStudents />
           )}
-
-          <div className="flex justify-center gap-2 mt-6">
-            {[1, 2, 3, 4, 5].map((page) => (
-              <Button
-                key={page}
-                variant={page === 1 ? "default" : "outline"}
-                className={`w-8 h-8 p-0 ${page === 1 ? "bg-second" : ""}`}
-              >
-                {page}
-              </Button>
-            ))}
-          </div>
         </div>
       </div>
     </div>
