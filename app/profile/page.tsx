@@ -4,7 +4,7 @@ import Profile from "../components/Profile";
 const page = () => {
   return (
     <div>
-      <Profile userRole="teacher" />
+      <Profile userRole="student" />
     </div>
   );
 };

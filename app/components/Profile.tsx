@@ -213,7 +213,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = "student" }) => {
           )}
         </div>
 
-        <Card className="bg-neutral-800">
+        <Card className="bg-neutral-700">
           <CardContent className="p-6">
             {/* Personal Information */}
             <div className="flex items-start gap-6 mb-6">
