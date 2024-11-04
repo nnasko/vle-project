@@ -1,3 +1,5 @@
+// app/layout.tsx
+
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -29,9 +31,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex min-h-screen">
-          <Navbar />
-          <main className="flex-1">{children}</main>
+        <div className="flex">
+          <div className="fixed h-screen">
+            <Navbar userRole="admin" userName="John Doe" />
+          </div>
+          <main className="flex-1 ml-64">{children}</main>
         </div>
       </body>
     </html>
