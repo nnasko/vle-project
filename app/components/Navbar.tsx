@@ -5,13 +5,11 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
-  Users,
   GraduationCap,
   CalendarDays,
   BookOpen,
   MessageSquare,
   FileText,
-  Settings,
   LogOut,
   ChevronLeft,
   Bell,
@@ -165,7 +163,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({
   userRole,
   userName,
-  userAvatar = "/api/placeholder/32/32",
+  userAvatar = "https://media.tenor.com/Tw8FiJa_KWsAAAAe/alpha-wolf.png",
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
@@ -211,7 +209,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <Avatar className="rounded-md w-12 h-12">
               <AvatarImage src={userAvatar} alt="User avatar" />
             </Avatar>
-            <div className="absolute -top-2 -right-2">
+            <div className="absolute -top-2 -left-2">
               <Button
                 variant="ghost"
                 size="icon"
