@@ -92,7 +92,7 @@ const StudentCard: React.FC<ViewProps> = ({
             expandedSections={{
               personal: false,
               academic: false,
-              logs: true,
+              logs: expandedStudent === student.id,
             }}
             trigger={
               <Button
@@ -112,9 +112,9 @@ const StudentCard: React.FC<ViewProps> = ({
             existingIds={existingIds}
             onSubmit={onUpdate}
             expandedSections={{
-              personal: true,
-              academic: true,
-              logs: false,
+              personal: false,
+              academic: false,
+              logs: expandedStudent === student.id,
             }}
             trigger={
               <Button
@@ -192,7 +192,7 @@ const StudentRow: React.FC<ViewProps> = ({
           expandedSections={{
             personal: false,
             academic: false,
-            logs: true,
+            logs: expandedStudent === student.id,
           }}
           trigger={
             <Button
@@ -212,9 +212,9 @@ const StudentRow: React.FC<ViewProps> = ({
           existingIds={existingIds}
           onSubmit={onUpdate}
           expandedSections={{
-            personal: true,
-            academic: true,
-            logs: false,
+            personal: false,
+            academic: false,
+            logs: expandedStudent === student.id,
           }}
           trigger={
             <Button
