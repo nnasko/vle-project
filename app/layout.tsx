@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <div className="flex">
           <div className="fixed h-screen">
-            <Navbar userRole="admin" userName="John Doe" />
+            <Navbar userRole="teacher" userName="John Doe" />
           </div>
           <main className="flex-1 ml-64">{children}</main>
         </div>

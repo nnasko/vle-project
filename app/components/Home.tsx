@@ -231,7 +231,7 @@ const AdminDashboard = () => (
   </div>
 );
 
-const StaffDashboard = () => (
+const TeacherDashboard = () => (
   <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="bg-white text-black">
@@ -345,8 +345,8 @@ const StudentDashboard = () => (
     </div>
 
     <div className="flex flex-wrap gap-4">
-      <QuickActionButton icon={BookOpen} label="View Courses" />
-      <QuickActionButton icon={Calendar} label="Class Schedule" />
+      <QuickActionButton icon={BookOpen} label="Modules" />
+      <QuickActionButton icon={Calendar} label="Timetable" />
       <QuickActionButton icon={FileText} label="Assignments" />
       <QuickActionButton icon={MessageSquare} label="Messages" />
     </div>
@@ -375,13 +375,13 @@ const StudentDashboard = () => (
   </div>
 );
 const Home = () => {
-  const userRole = "admin"; // "staff" or "student" or "admin"
+  const userRole = "teacher"; // "teacher" or "student" or "admin"
 
   const getName = () => {
     switch (userRole) {
       case "admin":
         return "Administrator";
-      case "staff":
+      case "teacher":
         return "Dr. Smith";
       case "student":
         return "John";
@@ -410,8 +410,8 @@ const Home = () => {
 
         {userRole === "admin" ? (
           <AdminDashboard />
-        ) : userRole === "staff" ? (
-          <StaffDashboard />
+        ) : userRole === "teacher" ? (
+          <TeacherDashboard />
         ) : (
           <StudentDashboard />
         )}

@@ -149,12 +149,6 @@ const bottomNavItems: NavItem[] = [
     roles: ["admin", "teacher", "student"],
   },
   {
-    href: "/settings",
-    icon: Settings,
-    text: "SETTINGS",
-    roles: ["admin", "teacher", "student"],
-  },
-  {
     href: "/logout",
     icon: LogOut,
     text: "LOGOUT",
