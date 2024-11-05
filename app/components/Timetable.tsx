@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { UserCheck, Clock, Users, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Event {
   id: number;
@@ -26,10 +29,30 @@ interface Event {
   endTime: string;
   room: string;
   color: string;
+  attendance?: {
+    status: "present" | "late" | "absent" | "authorized";
+    minutes?: number;
+  };
 }
 
-const TimeTableGrid = () => {
-  const [events, setEvents] = useState([
+interface AttendanceStats {
+  total: number;
+  present: number;
+  late: number;
+  authorizedAbsence: number;
+  unauthorizedAbsence: number;
+  averageLateness: number;
+}
+
+interface TimeTableGridProps {
+  userId?: number;
+  userName?: string;
+}
+
+type AttendanceStatus = "present" | "late" | "absent" | "authorized";
+
+const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
+  const [events, setEvents] = useState<Event[]>([
     {
       id: 1,
       title: "Advanced Frameworks",
@@ -132,11 +155,13 @@ const TimeTableGrid = () => {
     },
   ]);
 
-  const days = ["MON", "TUE", "WED", "THU", "FRI"];
-
-  const timeSlots = Array.from({ length: 9 }, (_, i) => {
-    const hour = i + 9;
-    return `${hour.toString().padStart(2, "0")}:00`;
+  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats>({
+    total: 50,
+    present: 45,
+    late: 3,
+    authorizedAbsence: 1,
+    unauthorizedAbsence: 1,
+    averageLateness: 8,
   });
 
   const [newEvent, setNewEvent] = useState<Omit<Event, "id" | "color">>({
@@ -146,6 +171,13 @@ const TimeTableGrid = () => {
     startTime: "",
     endTime: "",
     room: "",
+  });
+
+  const days = ["MON", "TUE", "WED", "THU", "FRI"];
+
+  const timeSlots = Array.from({ length: 9 }, (_, i) => {
+    const hour = i + 9;
+    return `${hour.toString().padStart(2, "0")}:00`;
   });
 
   const calculateEventPosition = (
@@ -164,9 +196,7 @@ const TimeTableGrid = () => {
     const top = ((startHour - 9) / 8) * 100;
     const height = ((endHour - startHour) / 8) * 100;
     const left = days.indexOf(day) * 20;
-
-    // Adjust width to account for margins
-    const width = 19.6; // Slightly less than 20% to create gaps
+    const width = 19.6;
 
     return {
       top: `${top}%`,
@@ -196,18 +226,137 @@ const TimeTableGrid = () => {
       room: "",
     });
   };
+
+  const getAttendanceColor = (status: AttendanceStatus | undefined) => {
+    switch (status) {
+      case "present":
+        return "bg-emerald-500";
+      case "late":
+        return "bg-yellow-500";
+      case "absent":
+        return "bg-red-500";
+      case "authorized":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   return (
-    <div className="p-6 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">YOUR TIMETABLE</h2>
+    <div className="space-y-6 p-16 overflow-auto">
+      <div className="bg-neutral-800 rounded-md p-4">
+        {/* Attendance Overview */}
+        <Card className="bg-neutral-800 border-2 border-main">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm text-neutral-400">
+                  Attendance Rate
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {(
+                  (attendanceStats.present / attendanceStats.total) *
+                  100
+                ).toFixed(1)}
+                %
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm text-neutral-400">Punctuality</span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {(
+                  ((attendanceStats.present + attendanceStats.late) /
+                    attendanceStats.total) *
+                  100
+                ).toFixed(1)}
+                %
+              </p>
+              {attendanceStats.late > 0 && (
+                <p className="text-xs text-yellow-500">
+                  Avg. {attendanceStats.averageLateness} mins late
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-neutral-400">Sessions</span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {attendanceStats.total}
+              </p>
+              <div className="flex gap-2 text-xs">
+                <span className="text-emerald-500">
+                  {attendanceStats.present} present
+                </span>
+                <span className="text-yellow-500">
+                  {attendanceStats.late} late
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span className="text-sm text-neutral-400">Absences</span>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {attendanceStats.authorizedAbsence +
+                  attendanceStats.unauthorizedAbsence}
+              </p>
+              <div className="flex gap-2 text-xs">
+                <span className="text-blue-500">
+                  {attendanceStats.authorizedAbsence} authorized
+                </span>
+                <span className="text-red-500">
+                  {attendanceStats.unauthorizedAbsence} unauthorized
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Timetable Controls */}
+        <div className="bg-neutral-800 p-4 rounded-lg flex justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold text-white">
+              {userName ? `${userName}'s Timetable` : "Your Timetable"}
+            </h2>
+            <Select>
+              <SelectTrigger className="w-[150px] bg-neutral-800 border-neutral-600 text-white">
+                <SelectValue placeholder="Select Week" />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-800 border-neutral-700 text-white">
+                <SelectItem value="current">Current Week</SelectItem>
+                <SelectItem value="next">Next Week</SelectItem>
+                <SelectItem value="previous">Previous Week</SelectItem>
+                <SelectItem value="custom">Custom Week</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge
+              variant="outline"
+              className="h-9 px-4 rounded-md flex items-center bg-neutral-800 border-neutral-600 text-neutral-200"
+            >
+              Week 23 - June 3-7, 2024
+            </Badge>
+          </div>
+
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">Add Event</Button>
+              <Button className="bg-main hover:bg-second text-white">
+                Add Event
+              </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-neutral-800 border-neutral-700">
               <DialogHeader>
-                <DialogTitle>Add New Event</DialogTitle>
+                <DialogTitle className="text-white">Add New Event</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <Input
@@ -216,6 +365,7 @@ const TimeTableGrid = () => {
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, title: e.target.value })
                   }
+                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
                 />
                 <Input
                   placeholder="Instructor"
@@ -223,6 +373,7 @@ const TimeTableGrid = () => {
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, instructor: e.target.value })
                   }
+                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
                 />
                 <Input
                   placeholder="Room"
@@ -230,18 +381,19 @@ const TimeTableGrid = () => {
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, room: e.target.value })
                   }
+                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
                 />
                 <Select
                   onValueChange={(value) =>
                     setNewEvent({ ...newEvent, day: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-neutral-700 border-neutral-600 text-white">
                     <SelectValue placeholder="Select Day" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-neutral-800 border-neutral-700">
                     {days.map((day) => (
-                      <SelectItem key={day} value={day}>
+                      <SelectItem key={day} value={day} className="text-white">
                         {day}
                       </SelectItem>
                     ))}
@@ -253,6 +405,7 @@ const TimeTableGrid = () => {
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, startTime: e.target.value })
                   }
+                  className="bg-neutral-700 border-neutral-600 text-white"
                 />
                 <Input
                   type="time"
@@ -260,14 +413,21 @@ const TimeTableGrid = () => {
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, endTime: e.target.value })
                   }
+                  className="bg-neutral-700 border-neutral-600 text-white"
                 />
-                <Button onClick={handleAddEvent}>Add Event</Button>
+                <Button
+                  onClick={handleAddEvent}
+                  className="bg-main hover:bg-second text-white"
+                >
+                  Add Event
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="bg-neutral-800 p-8 rounded-lg">
+        {/* Timetable Grid */}
+        <div className="bg-neutral-800 p-6 rounded-lg">
           <div className="relative h-[640px] rounded-lg overflow-hidden">
             {/* Time labels */}
             <div className="absolute left-0 top-12 w-16 h-[calc(100%-48px)] border-r border-gray-700 bg-neutral-800 z-20">
@@ -336,15 +496,23 @@ const TimeTableGrid = () => {
                   return (
                     <div
                       key={event.id}
-                      className={`absolute ${event.color} text-white rounded overflow-hidden flex flex-col shadow-lg`}
+                      className={`absolute ${event.color} text-white rounded overflow-hidden flex flex-col shadow-lg group transition-all duration-200 hover:scale-[1.02] hover:z-10`}
                       style={{
                         top: position.top,
                         height: position.height,
                         left: position.left,
                         width: position.width,
-                        margin: "2px", // Added margin for spacing
+                        margin: "2px",
                       }}
                     >
+                      {/* Attendance indicator */}
+                      {event.attendance && (
+                        <div
+                          className={`h-1 ${getAttendanceColor(
+                            event.attendance.status
+                          )}`}
+                        />
+                      )}
                       <div className="flex-grow p-2">
                         <div className={`font-semibold ${titleTextSize}`}>
                           {event.title}
@@ -358,12 +526,36 @@ const TimeTableGrid = () => {
                       >
                         <div>{event.room}</div>
                         <div>{`${event.startTime} - ${event.endTime}`}</div>
+                        {event.attendance?.status === "late" && (
+                          <div className="text-yellow-300">
+                            {event.attendance.minutes}m late
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6 text-sm text-neutral-300">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-emerald-500 rounded" />
+            <span>Present</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-500 rounded" />
+            <span>Late</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded" />
+            <span>Absent</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 rounded" />
+            <span>Authorized Absence</span>
           </div>
         </div>
       </div>

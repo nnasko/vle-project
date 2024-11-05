@@ -31,6 +31,7 @@ import {
   SelectValue,
   SelectItem,
 } from "@/components/ui/select";
+import DepartmentPerformanceChart from "./charts/DepartmentPerformanceChart";
 
 interface QuickActionButtonProps {
   icon: React.ElementType;
@@ -64,7 +65,7 @@ const overviewData = [
 
 const AdminDashboard = () => (
   <div className="space-y-6 bg-neutral-700 p-4 rounded-lg">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="bg-white text-black">
         <CardHeader>
           <CardTitle>Total Students</CardTitle>
@@ -101,18 +102,6 @@ const AdminDashboard = () => (
           <p className="text-sm text-emerald-600">All performing well</p>
         </CardContent>
       </Card>
-      <Card className="bg-white text-black">
-        <CardHeader>
-          <CardTitle>Revenue</CardTitle>
-          <CardDescription className="text-neutral-400">
-            This academic year
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold">£2.4M</div>
-          <p className="text-sm text-emerald-600">↑ 12.5% from last year</p>
-        </CardContent>
-      </Card>
     </div>
 
     <div className="flex flex-wrap gap-4">
@@ -139,48 +128,10 @@ const AdminDashboard = () => (
           </Select>
         </CardHeader>
         <CardContent>
-          <Overview
-            data={[
-              { name: "Computing", students: 350, performance: 87 },
-              { name: "Engineering", students: 280, performance: 82 },
-              { name: "Business", students: 420, performance: 85 },
-              { name: "Science", students: 195, performance: 89 },
-            ]}
-          />
+          <DepartmentPerformanceChart />
         </CardContent>
       </Card>
       <div className="col-span-3 space-y-4">
-        <Card className="bg-white text-black">
-          <CardHeader>
-            <CardTitle>Department Performance</CardTitle>
-            <CardDescription className="text-neutral-400">
-              Top performing departments
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Computer Science", progress: 96 },
-                { name: "Data Science", progress: 94 },
-                { name: "Cyber Security", progress: 92 },
-                { name: "Software Engineering", progress: 90 },
-              ].map((dept) => (
-                <div key={dept.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{dept.name}</p>
-                    <p className="text-sm text-gray-500">{dept.progress}%</p>
-                  </div>
-                  <div className="h-2 rounded-full bg-gray-100">
-                    <div
-                      className="h-2 rounded-full bg-[#473BF0]"
-                      style={{ width: `${dept.progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
         <Card className="bg-white text-black">
           <CardHeader>
             <CardTitle>Recent Updates</CardTitle>
@@ -375,7 +326,7 @@ const StudentDashboard = () => (
   </div>
 );
 const Home = () => {
-  const userRole = "teacher"; // "teacher" or "student" or "admin"
+  const userRole = "student"; // "teacher" or "student" or "admin"
 
   const getName = () => {
     switch (userRole) {

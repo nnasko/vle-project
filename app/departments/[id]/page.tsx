@@ -18,7 +18,7 @@ import {
   Users,
   GraduationCap,
   BookOpen,
-  TrendingUp,
+  HomeIcon,
   Clock,
   UserCheck,
   Mail,
@@ -42,6 +42,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Module {
@@ -241,7 +249,6 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
         modules: ["SD201", "SD401"],
         status: "active",
       },
-      // Add more staff members...
     ];
 
     return (
@@ -310,6 +317,7 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
                 </TableCell>
                 <TableCell>
                   <Badge
+                    className="bg-main text-white"
                     variant={
                       staff.status === "active" ? "default" : "secondary"
                     }
@@ -410,6 +418,7 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
                 </TableCell>
                 <TableCell>
                   <Badge
+                    className="bg-main text-white"
                     variant={
                       student.status === "active" ? "default" : "secondary"
                     }
@@ -448,7 +457,6 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
         status: "active",
         passingRate: "78%",
       },
-      // Add more modules...
     ];
 
     return (
@@ -504,6 +512,7 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
                 </TableCell>
                 <TableCell>
                   <Badge
+                    className="bg-main text-white"
                     variant={
                       module.status === "active" ? "default" : "secondary"
                     }
@@ -528,17 +537,38 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
 
   return (
     <div className="p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/" className="flex items-center gap-2">
+                <HomeIcon className="h-4 w-4" />
+                Home
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/departments">Departments</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{department.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <div className="max-w-6xl mx-auto bg-neutral-700 p-6 rounded-md">
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold">{department.name}</h1>
+            <h1 className="text-2xl font-bold text-white">{department.name}</h1>
             <Badge
+              className="bg-main text-white"
               variant={department.status === "active" ? "default" : "secondary"}
             >
               {department.status}
             </Badge>
           </div>
-          <p className="text-gray-500">{department.description}</p>
+          <p className="text-gray-400">{department.description}</p>
         </div>
 
         {/* Key Statistics */}

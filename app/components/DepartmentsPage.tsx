@@ -251,6 +251,7 @@ const DepartmentsPage = () => {
                         {department.name}
                       </h3>
                       <Badge
+                        className="bg-main text-white"
                         variant={
                           department.status === "active"
                             ? "default"
