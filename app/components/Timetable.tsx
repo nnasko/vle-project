@@ -3,13 +3,6 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -47,130 +40,25 @@ interface AttendanceStats {
 interface TimeTableGridProps {
   userId?: number;
   userName?: string;
+  events: Event[];
+  isTeacher?: boolean;
 }
 
 type AttendanceStatus = "present" | "late" | "absent" | "authorized";
 
-const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: 1,
-      title: "Advanced Frameworks",
-      instructor: "Owen Tasker",
-      day: "MON",
-      startTime: "09:00",
-      endTime: "11:00",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 2,
-      title: "Professional Development",
-      instructor: "Chris Martin",
-      day: "MON",
-      startTime: "11:00",
-      endTime: "12:00",
-      room: "Seminar Room 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 3,
-      title: "Front End Development",
-      instructor: "Owen Tasker",
-      day: "MON",
-      startTime: "13:00",
-      endTime: "15:00",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 4,
-      title: "Industry Concepts",
-      instructor: "Owen Tasker",
-      day: "MON",
-      startTime: "15:30",
-      endTime: "17:00",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 5,
-      title: "Object Oriented Programming",
-      instructor: "Gavin Thomas",
-      day: "TUE",
-      startTime: "11:30",
-      endTime: "13:30",
-      room: "Seminar Room 2",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 6,
-      title: "Industry Skills",
-      instructor: "John Gordon",
-      day: "TUE",
-      startTime: "15:00",
-      endTime: "16:30",
-      room: "Media Lab 1",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 7,
-      title: "Back-End Development",
-      instructor: "Owen Tasker",
-      day: "WED",
-      startTime: "09:00",
-      endTime: "11:00",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 8,
-      title: "Course Progress",
-      instructor: "Gavin Thomas",
-      day: "WED",
-      startTime: "11:00",
-      endTime: "12:00",
-      room: "Seminar Room 2",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 9,
-      title: "Occupational Specialism",
-      instructor: "Owen Tasker",
-      day: "WED",
-      startTime: "12:30",
-      endTime: "14:30",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-    {
-      id: 10,
-      title: "Research & Development",
-      instructor: "Owen Tasker",
-      day: "WED",
-      startTime: "15:00",
-      endTime: "16:30",
-      room: "Games Lab 3",
-      color: "bg-indigo-600",
-    },
-  ]);
-
-  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats>({
+const TimeTableGrid: React.FC<TimeTableGridProps> = ({
+  userId,
+  userName,
+  events = [],
+  isTeacher = false,
+}) => {
+  const [attendanceStats] = useState<AttendanceStats>({
     total: 50,
     present: 45,
     late: 3,
     authorizedAbsence: 1,
     unauthorizedAbsence: 1,
     averageLateness: 8,
-  });
-
-  const [newEvent, setNewEvent] = useState<Omit<Event, "id" | "color">>({
-    title: "",
-    instructor: "",
-    day: "",
-    startTime: "",
-    endTime: "",
-    room: "",
   });
 
   const days = ["MON", "TUE", "WED", "THU", "FRI"];
@@ -196,7 +84,8 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
     const top = ((startHour - 9) / 8) * 100;
     const height = ((endHour - startHour) / 8) * 100;
     const left = days.indexOf(day) * 20;
-    const width = 19.6;
+    // Reduced width and added margin for better spacing
+    const width = 19;
 
     return {
       top: `${top}%`,
@@ -205,26 +94,6 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
       width: `${width}%`,
       heightPercent: height,
     };
-  };
-
-  const handleAddEvent = () => {
-    const newId = Math.max(...events.map((e) => e.id), 0) + 1;
-    setEvents([
-      ...events,
-      {
-        ...newEvent,
-        id: newId,
-        color: "bg-indigo-600",
-      },
-    ]);
-    setNewEvent({
-      title: "",
-      instructor: "",
-      day: "",
-      startTime: "",
-      endTime: "",
-      room: "",
-    });
   };
 
   const getAttendanceColor = (status: AttendanceStatus | undefined) => {
@@ -243,7 +112,7 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
   };
 
   return (
-    <div className="space-y-6 p-16 overflow-auto">
+    <div className="space-y-6 p-6 overflow-auto">
       <div className="bg-neutral-800 rounded-md p-4">
         {/* Attendance Overview */}
         <Card className="bg-neutral-800 border-2 border-main">
@@ -324,7 +193,7 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
         </Card>
 
         {/* Timetable Controls */}
-        <div className="bg-neutral-800 p-4 rounded-lg flex justify-between items-center gap-4">
+        <div className="bg-neutral-800 p-4 rounded-lg flex justify-between items-center gap-4 mt-4">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-white">
               {userName ? `${userName}'s Timetable` : "Your Timetable"}
@@ -347,87 +216,10 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
               Week 23 - June 3-7, 2024
             </Badge>
           </div>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-main hover:bg-second text-white">
-                Add Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-neutral-800 border-neutral-700">
-              <DialogHeader>
-                <DialogTitle className="text-white">Add New Event</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Input
-                  placeholder="Event Title"
-                  value={newEvent.title}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, title: e.target.value })
-                  }
-                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
-                />
-                <Input
-                  placeholder="Instructor"
-                  value={newEvent.instructor}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, instructor: e.target.value })
-                  }
-                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
-                />
-                <Input
-                  placeholder="Room"
-                  value={newEvent.room}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, room: e.target.value })
-                  }
-                  className="bg-neutral-700 border-neutral-600 text-white placeholder:text-neutral-400"
-                />
-                <Select
-                  onValueChange={(value) =>
-                    setNewEvent({ ...newEvent, day: value })
-                  }
-                >
-                  <SelectTrigger className="bg-neutral-700 border-neutral-600 text-white">
-                    <SelectValue placeholder="Select Day" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-neutral-800 border-neutral-700">
-                    {days.map((day) => (
-                      <SelectItem key={day} value={day} className="text-white">
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="time"
-                  value={newEvent.startTime}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, startTime: e.target.value })
-                  }
-                  className="bg-neutral-700 border-neutral-600 text-white"
-                />
-                <Input
-                  type="time"
-                  value={newEvent.endTime}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, endTime: e.target.value })
-                  }
-                  className="bg-neutral-700 border-neutral-600 text-white"
-                />
-                <Button
-                  onClick={handleAddEvent}
-                  className="bg-main hover:bg-second text-white"
-                >
-                  Add Event
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {/* Timetable Grid */}
-        <div className="bg-neutral-800 p-6 rounded-lg">
+        <div className="bg-neutral-800 p-6 rounded-lg mt-4">
           <div className="relative h-[640px] rounded-lg overflow-hidden">
             {/* Time labels */}
             <div className="absolute left-0 top-12 w-16 h-[calc(100%-48px)] border-r border-gray-700 bg-neutral-800 z-20">
@@ -496,13 +288,13 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
                   return (
                     <div
                       key={event.id}
-                      className={`absolute ${event.color} text-white rounded overflow-hidden flex flex-col shadow-lg group transition-all duration-200 hover:scale-[1.02] hover:z-10`}
+                      className={`absolute ${event.color} text-white rounded-md overflow-hidden flex flex-col shadow-lg group transition-all duration-200 hover:scale-[1.02] hover:z-10`}
                       style={{
                         top: position.top,
                         height: position.height,
                         left: position.left,
                         width: position.width,
-                        margin: "2px",
+                        margin: "4px", // Increased margin for better spacing
                       }}
                     >
                       {/* Attendance indicator */}
@@ -540,7 +332,8 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({ userId, userName }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm text-neutral-300">
+        {/* Legend */}
+        <div className="flex items-center gap-6 text-sm text-neutral-300 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-emerald-500 rounded" />
             <span>Present</span>

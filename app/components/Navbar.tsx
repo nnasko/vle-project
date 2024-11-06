@@ -45,7 +45,7 @@ const NavButton: React.FC<NavButtonProps> = ({
 }) => (
   <Button
     asChild
-    className={`w-full justify-start gap-3 text-white font-medium text-lg bg-neutral-800 hover:bg-neutral-700 transition-all ${
+    className={`w-full justify-start gap-3  text-white font-medium text-lg bg-neutral-800 hover:bg-neutral-700 transition-all ${
       isCollapsed ? "px-2" : "px-4"
     }`}
     variant="ghost"
@@ -58,6 +58,12 @@ const NavButton: React.FC<NavButtonProps> = ({
 );
 
 const navigationItems: NavItem[] = [
+  {
+    href: "/",
+    icon: HomeIcon,
+    text: "HOME",
+    roles: ["student", "teacher", "admin"],
+  },
   // Admin navigation
   {
     href: "/departments",
@@ -105,12 +111,6 @@ const navigationItems: NavItem[] = [
   },
 
   // Student navigation
-  {
-    href: "/",
-    icon: HomeIcon,
-    text: "HOME",
-    roles: ["student"],
-  },
   {
     href: "/courses",
     icon: BookOpen,

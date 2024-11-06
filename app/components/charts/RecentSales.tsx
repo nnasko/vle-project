@@ -10,7 +10,7 @@ export function RecentSales() {
           <AvatarImage src="/api/placeholder/32/32" alt="Avatar" />
           <AvatarFallback>AK</AvatarFallback>
         </Avatar>
-        <div className="ml-4 space-y-1">
+        <div className="ml-4 space-y-1 ">
           <p className="text-sm font-medium leading-none text-black">
             Atanas Kyurchiev
           </p>

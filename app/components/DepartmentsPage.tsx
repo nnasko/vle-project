@@ -98,7 +98,7 @@ const EditDepartmentForm: React.FC<EditDepartmentFormProps> = ({
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select department head" />
+            <SelectValue placeholder="Select department head " />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Dr. Sarah Johnson">Dr. Sarah Johnson</SelectItem>

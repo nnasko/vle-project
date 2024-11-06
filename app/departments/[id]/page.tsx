@@ -1,6 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,6 +29,11 @@ import {
   UserCheck,
   Mail,
   Phone,
+  Search,
+  Plus,
+  BookText,
+  ListChecks,
+  ClipboardCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -52,10 +63,30 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface LearningOutcome {
+  id: string;
+  description: string;
+}
+
+interface Assessment {
+  id: string;
+  type: string;
+  weight: number;
+  description: string;
+}
+
 interface Module {
   id: string;
   code: string;
   name: string;
+  year: number;
+  credits: number;
+  description: string;
+  prerequisites: string[];
+  learningOutcomes: LearningOutcome[];
+  assessments: Assessment[];
+  topics: string[];
+  status: "active" | "review" | "archived";
   passingRate: number;
   averageScore: number;
 }
@@ -68,10 +99,429 @@ interface DepartmentData {
   description: string;
   staffCount: number;
   studentCount: number;
-  modules: Module[];
   enrollmentTrend: { month: string; students: number }[];
   attendanceRate: { week: string; rate: number }[];
 }
+
+const departmentModules = {
+  softwareDevelopment: [
+    {
+      id: "1",
+      code: "SD101",
+      name: "Programming Fundamentals",
+      year: 1,
+      credits: 20,
+      description:
+        "Introduction to programming concepts and problem-solving using Python",
+      prerequisites: [],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Understand and apply fundamental programming concepts",
+        },
+        {
+          id: "lo2",
+          description:
+            "Develop simple algorithms to solve computational problems",
+        },
+        {
+          id: "lo3",
+          description: "Write and debug basic Python programs",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Programming Assignment",
+          weight: 40,
+          description: "Series of programming exercises",
+        },
+        {
+          id: "a2",
+          type: "Final Project",
+          weight: 60,
+          description: "Development of a complete application",
+        },
+      ],
+      topics: [
+        "Variables and Data Types",
+        "Control Structures",
+        "Functions and Methods",
+        "Basic Data Structures",
+        "Object-Oriented Programming Basics",
+        "File Handling",
+        "Basic Error Handling",
+      ],
+      status: "active",
+      passingRate: 85,
+      averageScore: 76,
+    },
+    {
+      id: "2",
+      code: "SD102",
+      name: "Web Development Foundations",
+      year: 1,
+      credits: 20,
+      description:
+        "Introduction to web development technologies and principles",
+      prerequisites: ["SD101"],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Create responsive websites using HTML5 and CSS3",
+        },
+        {
+          id: "lo2",
+          description: "Implement client-side functionality using JavaScript",
+        },
+        {
+          id: "lo3",
+          description: "Understand web accessibility and usability principles",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Portfolio",
+          weight: 50,
+          description: "Collection of web development projects",
+        },
+        {
+          id: "a2",
+          type: "Technical Test",
+          weight: 50,
+          description: "Practical web development assessment",
+        },
+      ],
+      topics: [
+        "HTML5 Semantics",
+        "CSS3 Layouts and Responsive Design",
+        "JavaScript Fundamentals",
+        "DOM Manipulation",
+        "Web APIs",
+        "Version Control with Git",
+        "Web Performance Optimization",
+      ],
+      status: "active",
+      passingRate: 82,
+      averageScore: 74,
+    },
+  ],
+  dataScience: [
+    {
+      id: "ds101",
+      code: "DS101",
+      name: "Data Analysis Fundamentals",
+      year: 1,
+      credits: 20,
+      description:
+        "Introduction to data analysis concepts, statistical methods, and basic Python programming for data science",
+      prerequisites: [],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description:
+            "Apply fundamental statistical concepts to analyze datasets",
+        },
+        {
+          id: "lo2",
+          description: "Implement data cleaning and preprocessing techniques",
+        },
+        {
+          id: "lo3",
+          description:
+            "Use Python libraries (NumPy, Pandas) for data manipulation",
+        },
+        {
+          id: "lo4",
+          description:
+            "Create basic data visualizations using matplotlib and seaborn",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Data Analysis Project",
+          weight: 40,
+          description: "Individual project analyzing a real-world dataset",
+        },
+        {
+          id: "a2",
+          type: "Technical Assessment",
+          weight: 30,
+          description: "Practical examination of data analysis skills",
+        },
+        {
+          id: "a3",
+          type: "Written Assignment",
+          weight: 30,
+          description: "Statistical concepts and methodology report",
+        },
+      ],
+      topics: [
+        "Introduction to Statistics",
+        "Python for Data Analysis",
+        "Data Cleaning and Preprocessing",
+        "Exploratory Data Analysis",
+        "Descriptive Statistics",
+        "Probability Distributions",
+        "Data Visualization Basics",
+        "Hypothesis Testing",
+      ],
+      status: "active",
+      passingRate: 88,
+      averageScore: 79,
+    },
+    {
+      id: "ds102",
+      code: "DS102",
+      name: "Statistical Learning",
+      year: 1,
+      credits: 20,
+      description:
+        "Fundamentals of statistical learning, regression analysis, and predictive modeling",
+      prerequisites: ["DS101"],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Apply regression techniques for predictive modeling",
+        },
+        {
+          id: "lo2",
+          description: "Evaluate model performance using statistical metrics",
+        },
+        {
+          id: "lo3",
+          description: "Implement feature selection and engineering methods",
+        },
+        {
+          id: "lo4",
+          description: "Understand bias-variance tradeoff and model validation",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Modeling Project",
+          weight: 50,
+          description: "Predictive modeling project with real data",
+        },
+        {
+          id: "a2",
+          type: "Written Exam",
+          weight: 30,
+          description: "Statistical learning theory and concepts",
+        },
+        {
+          id: "a3",
+          type: "Assignments",
+          weight: 20,
+          description: "Regular programming assignments",
+        },
+      ],
+      topics: [
+        "Linear Regression",
+        "Logistic Regression",
+        "Model Selection",
+        "Cross-Validation",
+        "Feature Engineering",
+        "Regularization Methods",
+        "Model Evaluation Metrics",
+        "Statistical Inference",
+      ],
+      status: "active",
+      passingRate: 85,
+      averageScore: 76,
+    },
+    {
+      id: "ds201",
+      code: "DS201",
+      name: "Machine Learning",
+      year: 2,
+      credits: 20,
+      description:
+        "Comprehensive study of machine learning algorithms, techniques, and applications",
+      prerequisites: ["DS101", "DS102"],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Implement and evaluate supervised learning algorithms",
+        },
+        {
+          id: "lo2",
+          description:
+            "Apply unsupervised learning techniques for pattern discovery",
+        },
+        {
+          id: "lo3",
+          description: "Develop deep learning models using modern frameworks",
+        },
+        {
+          id: "lo4",
+          description:
+            "Deploy machine learning models in practical applications",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "ML Project",
+          weight: 40,
+          description: "End-to-end machine learning project",
+        },
+        {
+          id: "a2",
+          type: "Research Paper",
+          weight: 30,
+          description: "Analysis of advanced ML techniques",
+        },
+        {
+          id: "a3",
+          type: "Practical Exam",
+          weight: 30,
+          description: "Implementation of ML algorithms",
+        },
+      ],
+      topics: [
+        "Supervised Learning",
+        "Unsupervised Learning",
+        "Neural Networks",
+        "Support Vector Machines",
+        "Decision Trees",
+        "Ensemble Methods",
+        "Deep Learning Introduction",
+        "Model Deployment",
+      ],
+      status: "active",
+      passingRate: 75,
+      averageScore: 70,
+    },
+    {
+      id: "ds301",
+      code: "DS301",
+      name: "Big Data Analytics",
+      year: 3,
+      credits: 20,
+      description:
+        "Advanced techniques for processing and analyzing large-scale datasets using distributed computing",
+      prerequisites: ["DS201"],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Design and implement big data processing pipelines",
+        },
+        {
+          id: "lo2",
+          description:
+            "Apply distributed computing frameworks for data analysis",
+        },
+        {
+          id: "lo3",
+          description: "Develop scalable machine learning solutions",
+        },
+        {
+          id: "lo4",
+          description: "Implement real-time data processing systems",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Group Project",
+          weight: 50,
+          description: "Large-scale data processing project",
+        },
+        {
+          id: "a2",
+          type: "Individual Assignment",
+          weight: 30,
+          description: "Distributed computing implementation",
+        },
+        {
+          id: "a3",
+          type: "Presentation",
+          weight: 20,
+          description: "Project presentation and documentation",
+        },
+      ],
+      topics: [
+        "Hadoop Ecosystem",
+        "Apache Spark",
+        "Distributed Computing",
+        "Stream Processing",
+        "NoSQL Databases",
+        "Data Lakes",
+        "Scalable ML Pipelines",
+        "Cloud Computing Platforms",
+      ],
+      status: "active",
+      passingRate: 80,
+      averageScore: 73,
+    },
+    {
+      id: "ds302",
+      code: "DS302",
+      name: "Data Visualization and Communication",
+      year: 3,
+      credits: 20,
+      description:
+        "Advanced data visualization techniques and principles of communicating insights effectively",
+      prerequisites: ["DS201"],
+      learningOutcomes: [
+        {
+          id: "lo1",
+          description: "Create interactive data visualizations",
+        },
+        {
+          id: "lo2",
+          description: "Apply principles of visual design and perception",
+        },
+        {
+          id: "lo3",
+          description: "Develop dashboard applications",
+        },
+        {
+          id: "lo4",
+          description:
+            "Communicate technical findings to non-technical audiences",
+        },
+      ],
+      assessments: [
+        {
+          id: "a1",
+          type: "Visualization Portfolio",
+          weight: 40,
+          description: "Collection of visualization projects",
+        },
+        {
+          id: "a2",
+          type: "Dashboard Project",
+          weight: 40,
+          description: "Interactive dashboard development",
+        },
+        {
+          id: "a3",
+          type: "Presentation",
+          weight: 20,
+          description: "Data storytelling presentation",
+        },
+      ],
+      topics: [
+        "Data Visualization Principles",
+        "Interactive Visualizations",
+        "Dashboard Design",
+        "D3.js and Plot.ly",
+        "Tableau",
+        "Data Storytelling",
+        "Visual Perception",
+        "Communication Skills",
+      ],
+      status: "active",
+      passingRate: 82,
+      averageScore: 75,
+    },
+  ],
+};
 
 // Mock API function - replace with actual API call
 const fetchDepartmentData = async (id: string): Promise<DepartmentData> => {
@@ -86,29 +536,6 @@ const fetchDepartmentData = async (id: string): Promise<DepartmentData> => {
         "Leading department for software engineering and development practices.",
       staffCount: 12,
       studentCount: 175,
-      modules: [
-        {
-          id: "1",
-          code: "SD101",
-          name: "Introduction to Programming",
-          passingRate: 85,
-          averageScore: 76,
-        },
-        {
-          id: "2",
-          code: "SD201",
-          name: "Web Development",
-          passingRate: 78,
-          averageScore: 72,
-        },
-        {
-          id: "3",
-          code: "SD301",
-          name: "Mobile App Development",
-          passingRate: 82,
-          averageScore: 74,
-        },
-      ],
       enrollmentTrend: [
         { month: "Jan", students: 145 },
         { month: "Feb", students: 156 },
@@ -135,29 +562,6 @@ const fetchDepartmentData = async (id: string): Promise<DepartmentData> => {
         "Focused on data analysis, machine learning, and statistical modeling.",
       staffCount: 8,
       studentCount: 98,
-      modules: [
-        {
-          id: "4",
-          code: "DS101",
-          name: "Data Analysis Fundamentals",
-          passingRate: 88,
-          averageScore: 79,
-        },
-        {
-          id: "5",
-          code: "DS201",
-          name: "Machine Learning",
-          passingRate: 75,
-          averageScore: 70,
-        },
-        {
-          id: "6",
-          code: "DS301",
-          name: "Big Data Analytics",
-          passingRate: 80,
-          averageScore: 73,
-        },
-      ],
       enrollmentTrend: [
         { month: "Jan", students: 85 },
         { month: "Feb", students: 90 },
@@ -185,6 +589,107 @@ interface DepartmentDetailProps {
     id: string;
   };
 }
+
+const ModuleCard: React.FC<{ module: Module }> = ({ module }) => (
+  <Card className="mb-4">
+    <CardHeader>
+      <div className="flex justify-between items-start ">
+        <div>
+          <CardTitle className="text-lg font-bold">
+            {module.code}: {module.name}
+          </CardTitle>
+          <CardDescription>
+            Year {module.year} • {module.credits} Credits
+          </CardDescription>
+        </div>
+        <Badge
+          variant={module.status === "active" ? "default" : "secondary"}
+          className="bg-main text-white"
+        >
+          {module.status}
+        </Badge>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        <div>
+          <h4 className="font-semibold mb-2">Description</h4>
+          <p className="text-sm text-gray-600">{module.description}</p>
+        </div>
+
+        {module.prerequisites.length > 0 && (
+          <div>
+            <h4 className="font-semibold mb-2">Prerequisites</h4>
+            <div className="flex gap-2">
+              {module.prerequisites.map((prereq) => (
+                <Badge key={prereq} variant="outline">
+                  {prereq}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <h4 className="font-semibold mb-2">Learning Outcomes</h4>
+          <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+            {module.learningOutcomes.map((outcome) => (
+              <li key={outcome.id}>{outcome.description}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-2">Topics Covered</h4>
+          <div className="flex flex-wrap gap-2">
+            {module.topics.map((topic) => (
+              <Badge key={topic} variant="secondary">
+                {topic}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-2">Assessment Methods</h4>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Weight</TableHead>
+                <TableHead>Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {module.assessments.map((assessment) => (
+                <TableRow key={assessment.id}>
+                  <TableCell>{assessment.type}</TableCell>
+                  <TableCell>{assessment.weight}%</TableCell>
+                  <TableCell>{assessment.description}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            <BookText className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">
+              Passing Rate: {module.passingRate}%
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">
+              Average Score: {module.averageScore}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
   const [department, setDepartment] = useState<DepartmentData | null>(null);
@@ -436,94 +941,73 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
 
   // Modules Tab Content
   const ModulesTab = ({ departmentId }) => {
-    const modules = [
-      {
-        id: 1,
-        code: "SD101",
-        name: "Introduction to Programming",
-        lecturer: "Dr. Sarah Johnson",
-        students: 45,
-        schedule: "Mon, Wed 10:00-12:00",
-        status: "active",
-        passingRate: "85%",
-      },
-      {
-        id: 2,
-        code: "SD201",
-        name: "Web Development",
-        lecturer: "Prof. David Wilson",
-        students: 38,
-        schedule: "Tue, Thu 14:00-16:00",
-        status: "active",
-        passingRate: "78%",
-      },
-    ];
+    const [yearFilter, setYearFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [searchTerm, setSearchTerm] = useState<string>("");
+
+    const isDepartmentDataScience = departmentId.toString() === "2";
+    const modules = isDepartmentDataScience
+      ? departmentModules.dataScience
+      : departmentModules.softwareDevelopment;
+
+    const filteredModules = modules.filter((module) => {
+      const matchesSearch =
+        module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        module.code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesYear =
+        yearFilter === "all" || module.year === parseInt(yearFilter);
+      const matchesStatus =
+        statusFilter === "all" || module.status === statusFilter;
+      return matchesSearch && matchesYear && matchesStatus;
+    });
 
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <Input placeholder="Search modules..." className="w-64" />
-            <Select>
+          <div className="flex gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search modules..."
+                className="pl-10 w-64"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                <SelectItem value="1">Year 1</SelectItem>
+                <SelectItem value="2">Year 2</SelectItem>
+                <SelectItem value="3">Year 3</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="review">Under Review</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button className="bg-main hover:bg-second">Add Module</Button>
+          <Button className="bg-main hover:bg-second">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Module
+          </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Module</TableHead>
-              <TableHead>Lecturer</TableHead>
-              <TableHead>Students</TableHead>
-              <TableHead>Schedule</TableHead>
-              <TableHead>Performance</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {modules.map((module) => (
-              <TableRow key={module.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{module.name}</div>
-                    <div className="text-sm text-gray-500">{module.code}</div>
-                  </div>
-                </TableCell>
-                <TableCell>{module.lecturer}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <GraduationCap className="h-4 w-4" />
-                    {module.students}
-                  </div>
-                </TableCell>
-                <TableCell>{module.schedule}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{module.passingRate}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className="bg-main text-white"
-                    variant={
-                      module.status === "active" ? "default" : "secondary"
-                    }
-                  >
-                    {module.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="space-y-6">
+          {filteredModules.map((module) => (
+            <ModuleCard key={module.id} module={module} />
+          ))}
+        </div>
       </div>
     );
   };
@@ -594,9 +1078,7 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ params }) => {
               <BookOpen className="w-4 h-4 text-main" />
               <span className="text-sm text-gray-500">Active Modules</span>
             </div>
-            <div className="text-2xl font-bold">
-              {department.modules.length}
-            </div>
+            <div className="text-2xl font-bold"></div>
           </Card>
 
           <Card className="p-4">

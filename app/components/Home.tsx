@@ -326,7 +326,7 @@ const StudentDashboard = () => (
   </div>
 );
 const Home = () => {
-  const userRole = "student"; // "teacher" or "student" or "admin"
+  const userRole = "admin"; // "teacher" or "student" or "admin"
 
   const getName = () => {
     switch (userRole) {
@@ -342,7 +342,7 @@ const Home = () => {
   };
 
   return (
-    <div className="mt-2 bg-white min-h-screen">
+    <div className="mt-2 bg-white min-h-screen ">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

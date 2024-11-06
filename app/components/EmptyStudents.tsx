@@ -10,7 +10,7 @@ export default function EmptyStudents() {
       <h3 className="mb-2 text-xl font-medium text-neutral-300">
         No Students Yet
       </h3>
-      <p className="mb-4 text-sm text-neutral-400">
+      <p className="mb-4 text-sm text-neutral-400 ">
         Get started by creating your first student record
       </p>
       <Button className="bg-main hover:bg-second">Create Student</Button>

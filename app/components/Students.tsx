@@ -183,7 +183,7 @@ const StudentRow: React.FC<ViewProps> = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 ">
         <StudentDialog
           mode="edit"
           student={student}

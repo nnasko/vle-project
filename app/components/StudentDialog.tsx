@@ -596,7 +596,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
             <Button
               type="submit"
               onClick={handleSubmit}
-              className="bg-main mt-4 hover:bg-second text-white"
+              className="bg-main mt-4  hover:bg-second text-white"
             >
               Save Changes
             </Button>

@@ -213,7 +213,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = "student" }) => {
           )}
         </div>
 
-        <Card className="bg-neutral-700">
+        <Card className="bg-neutral-700  border-2 border-neutral-800">
           <CardContent className="p-6">
             {/* Personal Information */}
             <div className="flex items-start gap-6 mb-6">
@@ -323,7 +323,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = "student" }) => {
                 <Button
                   variant="outline"
                   onClick={handleCancel}
-                  className="bg-gray-700 hover:bg-gray-600"
+                  className="bg-red-500 hover:bg-red-600 text-white hover:text-white"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Cancel

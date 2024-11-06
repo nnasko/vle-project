@@ -140,7 +140,7 @@ export default function Notifications() {
           </Button>
         </div>
 
-        <div className="space-y-4 bg-neutral-700 p-6 rounded-lg">
+        <div className="space-y-4 bg-neutral-700  p-6 rounded-lg">
           <div className="flex gap-4 mb-6">
             <Select
               value={filter}
