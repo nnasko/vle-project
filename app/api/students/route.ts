@@ -65,6 +65,7 @@ export async function GET() {
   }
 }
 
+// app/api/students/route.ts (partial update)
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -92,17 +93,20 @@ export async function POST(request: Request) {
         },
       });
 
+      // Prepare student data
+      const studentData = {
+        userId: newUser.id,
+        studentId: `STU${Math.floor(Math.random() * 100000)}`,
+        currentGrade,
+        expectedGraduation: new Date(
+          new Date().setFullYear(new Date().getFullYear() + 4)
+        ),
+        ...(cohortId ? { cohortId } : {}), // Only include cohortId if provided
+      };
+
       // Create student profile
       const student = await prisma.student.create({
-        data: {
-          userId: newUser.id,
-          studentId: `STU${Math.floor(Math.random() * 100000)}`,
-          currentGrade,
-          cohortId,
-          expectedGraduation: new Date(
-            new Date().setFullYear(new Date().getFullYear() + 4)
-          ),
-        },
+        data: studentData,
         include: {
           user: {
             select: {

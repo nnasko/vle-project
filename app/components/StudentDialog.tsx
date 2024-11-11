@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,14 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { GradeLevel } from "@prisma/client";
+
+interface Cohort {
+  id: string;
+  name: string;
+  course: {
+    name: string;
+  };
+}
 
 interface StudentDialogProps {
   mode: "create" | "edit";
@@ -49,6 +57,29 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
     cohortId: student?.cohortId || undefined,
     password: "", // Only used for create mode
   });
+
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch available cohorts
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/cohorts/available");
+        if (response.ok) {
+          const data = await response.json();
+          setCohorts(data);
+        }
+      } catch (error) {
+        console.error("Error fetching cohorts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCohorts();
+  }, []);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -157,16 +188,19 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
               onValueChange={(value) =>
                 setFormData((prev) => ({ ...prev, cohortId: value }))
               }
+              disabled={loading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select cohort" />
+                <SelectValue
+                  placeholder={loading ? "Loading cohorts..." : "Select cohort"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cohort-1">
-                  Software Development 2024A
-                </SelectItem>
-                <SelectItem value="cohort-2">Web Design 2024A</SelectItem>
-                <SelectItem value="cohort-3">Data Science 2024A</SelectItem>
+                {cohorts.map((cohort) => (
+                  <SelectItem key={cohort.id} value={cohort.id}>
+                    {cohort.name} - {cohort.course.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -175,6 +209,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
             <Button
               type="submit"
               className="bg-main hover:bg-second text-white"
+              disabled={loading}
             >
               {mode === "create" ? "Add Student" : "Save Changes"}
             </Button>
