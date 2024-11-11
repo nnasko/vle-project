@@ -294,10 +294,10 @@ const Messages = () => {
           </Dialog>
         </div>
 
-        <div className="bg-neutral-800 rounded-lg h-[calc(100vh-200px)]">
+        <div className="bg-neutral-700 rounded-lg h-[calc(100vh-200px)]">
           <div className="grid grid-cols-3 gap-6 h-full">
             {/* Users List */}
-            <div className="col-span-1 border-r border-neutral-700 p-6">
+            <div className="col-span-1 border-r border-neutral-800 p-6">
               <div className="h-full flex flex-col">
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
@@ -314,8 +314,8 @@ const Messages = () => {
                       key={user.id}
                       className={`p-3 rounded-lg cursor-pointer transition-colors ${
                         selectedUser?.id === user.id
-                          ? "bg-neutral-700"
-                          : "hover:bg-neutral-700"
+                          ? "bg-neutral-800"
+                          : "hover:bg-neutral-800"
                       }`}
                       onClick={() => setSelectedUser(user)}
                     >
@@ -331,12 +331,12 @@ const Messages = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div
-                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-800 ${
+                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-700 ${
                               user.status === "online"
                                 ? "bg-green-500"
                                 : user.status === "away"
                                 ? "bg-yellow-500"
-                                : "bg-neutral-500"
+                                : "bg-neutral-400"
                             }`}
                           />
                         </div>
@@ -354,7 +354,7 @@ const Messages = () => {
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 hover:bg-neutral-800"
+                                  className="h-8 w-8 p-0 hover:bg-neutral-700"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <MoreVertical className="h-4 w-4 text-white" />
@@ -407,7 +407,7 @@ const Messages = () => {
                               className={`max-w-[70%] ${
                                 isSentByMe
                                   ? "bg-main text-white"
-                                  : "bg-neutral-700 text-white"
+                                  : "bg-neutral-800 text-white"
                               } rounded-lg p-3`}
                             >
                               <p>{message.content}</p>
