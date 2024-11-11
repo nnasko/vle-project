@@ -7,9 +7,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   Select,
   SelectContent,
@@ -21,10 +35,13 @@ import {
   Search,
   Plus,
   Send,
-  ChevronRight,
   Clock,
   Home as HomeIcon,
+  MoreVertical,
+  Trash2,
+  Home,
 } from "lucide-react";
+import Link from "next/link";
 
 interface User {
   id: number;
@@ -152,8 +169,9 @@ const Messages = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [threads, setThreads] = useState(mockThreads);
+  const [availableUsers, setAvailableUsers] = useState(mockUsers);
 
-  const filteredUsers = mockUsers.filter((user) =>
+  const filteredUsers = availableUsers.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -185,23 +203,53 @@ const Messages = () => {
     setNewMessage("");
   };
 
+  const handleDeleteChat = (userId: number) => {
+    setThreads((prev) => {
+      const newThreads = { ...prev };
+      delete newThreads[userId];
+      return newThreads;
+    });
+
+    if (selectedUser?.id === userId) {
+      setSelectedUser(null);
+    }
+  };
+
   return (
-    <div className="p-6 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen">
+      <div className="p-6 container mx-auto">
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-sm text-neutral-400 mb-6">
-          <HomeIcon className="w-4 h-4" />
-          <ChevronRight className="w-4 h-4" />
-          <span>Messages</span>
-          {selectedUser && (
-            <>
-              <ChevronRight className="w-4 h-4" />
-              <span>{selectedUser.name}</span>
-            </>
-          )}
-        </div>
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild className="flex items-center gap-2">
+                <Link href="/">
+                  <Home className="w-4 h-4" />
+                  Home
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link href="/messages">Messages</Link>
+                </BreadcrumbLink>
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+            {selectedUser && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{selectedUser.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="flex justify-between items-center mb-6">
+          <span className="text-2xl font-bo"> MESSAGES</span>
           <h1 className="text-2xl font-bold text-white">MESSAGES</h1>
           <Dialog>
             <DialogTrigger asChild>
@@ -247,11 +295,11 @@ const Messages = () => {
           </Dialog>
         </div>
 
-        <div className="bg-neutral-800 p-6 rounded-lg">
-          <div className="grid grid-cols-3 gap-6">
+        <div className="bg-neutral-800 rounded-lg h-[calc(100vh-200px)]">
+          <div className="grid grid-cols-3 gap-6 h-full">
             {/* Users List */}
-            <div className="col-span-1 border-r border-neutral-700">
-              <div className="pr-4">
+            <div className="col-span-1 border-r border-neutral-700 p-6">
+              <div className="h-full flex flex-col">
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
                   <Input
@@ -261,7 +309,7 @@ const Messages = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="flex-1 overflow-y-auto space-y-2">
                   {filteredUsers.map((user) => (
                     <div
                       key={user.id}
@@ -297,16 +345,41 @@ const Messages = () => {
                           <div className="flex items-center justify-between">
                             <p className="font-medium text-white truncate">
                               {user.name}
+                              {user.unreadCount && (
+                                <span className="bg-main text-white text-xs px-2 mx-2 py-1 rounded-full">
+                                  {user.unreadCount}
+                                </span>
+                              )}
                             </p>
-                            {user.unreadCount && (
-                              <span className="ml-2 bg-main text-white text-xs px-2 py-1 rounded-full">
-                                {user.unreadCount}
-                              </span>
-                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreVertical className="h-4 w-4 text-white" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  className="text-red-500"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteChat(user.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Chat
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <div className="flex items-center gap-1 text-sm text-neutral-400">
-                            <Clock className="w-3 h-3" />
-                            <span>{user.lastActive}</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-sm text-neutral-400">
+                              <Clock className="w-3 h-3" />
+                              <span>{user.lastActive}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -317,11 +390,11 @@ const Messages = () => {
             </div>
 
             {/* Message Thread */}
-            <div className="col-span-2">
+            <div className="col-span-2 p-6">
               {selectedUser ? (
                 <div className="h-full flex flex-col">
-                  <div className="flex-1 min-h-0">
-                    <div className="space-y-4 h-[400px] overflow-y-auto p-4">
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="space-y-4">
                       {currentThread.map((message) => {
                         const isSentByMe = message.senderId === 0;
                         return (
