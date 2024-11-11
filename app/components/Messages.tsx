@@ -217,40 +217,39 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen">
+      <Breadcrumb className="mb-6 p-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild className="flex items-center gap-2">
+              <Link href="/">
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              <BreadcrumbLink asChild>
+                <Link href="/messages">Messages</Link>
+              </BreadcrumbLink>
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+          {selectedUser && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{selectedUser.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="p-6 container mx-auto">
         {/* Breadcrumbs */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild className="flex items-center gap-2">
-                <Link href="/">
-                  <Home className="w-4 h-4" />
-                  Home
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                <BreadcrumbLink asChild>
-                  <Link href="/messages">Messages</Link>
-                </BreadcrumbLink>
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-            {selectedUser && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{selectedUser.name}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </>
-            )}
-          </BreadcrumbList>
-        </Breadcrumb>
 
         <div className="flex justify-between items-center mb-6">
-          <span className="text-2xl font-bo"> MESSAGES</span>
-          <h1 className="text-2xl font-bold text-white">MESSAGES</h1>
+          <span className="text-2xl font-bold"> MESSAGES</span>
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-main hover:bg-second">
@@ -355,13 +354,13 @@ const Messages = () => {
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  className="h-8 w-8 p-0"
+                                  className="h-8 w-8 p-0 hover:bg-neutral-800"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <MoreVertical className="h-4 w-4 text-white" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" className="">
                                 <DropdownMenuItem
                                   className="text-red-500"
                                   onClick={(e) => {
