@@ -18,7 +18,7 @@ export default function LayoutProvider({
 
   return (
     <div className="flex min-h-screen bg-white pl-64">
-      <Navbar userRole="admin" userName="John Doe" />
+      <Navbar />
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );

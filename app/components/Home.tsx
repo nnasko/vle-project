@@ -336,7 +336,7 @@ const StudentDashboard = () => (
   </div>
 );
 const Home = () => {
-  const userRole = "teacher"; // "teacher" or "student" or "admin"
+  const userRole = "admin"; // "teacher" or "student" or "admin"
 
   const getName = () => {
     switch (userRole) {

@@ -1,4 +1,6 @@
+// app/(auth)/login/page.tsx
 "use client";
+
 import React, { useState } from "react";
 import {
   Card,
@@ -13,44 +15,112 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PencilRuler, ArrowRight, KeyRound, Mail } from "lucide-react";
 import { toast } from "react-toastify";
-import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+
+type LoginStep = "email" | "password" | "set-password";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isExistingUser, setIsExistingUser] = useState<boolean | null>(null);
-  const [step, setStep] = useState<"email" | "password" | "create">("email");
+  const [step, setStep] = useState<LoginStep>("email");
+  const [error, setError] = useState<string | null>(null);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate API call to check if user exists
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    // TODO: Replace with actual API call to check if user exists
-    const userExists = email.includes("existing"); // Temporary logic for demo
-    setIsExistingUser(userExists);
-    setStep(userExists ? "password" : "create");
-    setIsLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      if (!data.exists) {
+        setError(
+          "No account found with this email. Please contact your administrator."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user has set password
+      const passCheckResponse = await fetch("/api/auth/check-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const passCheckData = await passCheckResponse.json();
+
+      if (!passCheckResponse.ok) {
+        throw new Error(passCheckData.error || "Something went wrong");
+      }
+
+      setIsFirstLogin(!passCheckData.hasPassword);
+      setStep(passCheckData.hasPassword ? "password" : "set-password");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      if (step === "set-password") {
+        // Set initial password
+        const response = await fetch("/api/auth/set-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
 
-    // TODO: Handle login/registration logic here
-    toast.success(
-      step === "password"
-        ? "Successfully logged in!"
-        : "Account created successfully!"
-    );
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to set password");
+        }
+      }
 
-    setIsLoading(false);
+      // Login
+      const loginResponse = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!loginResponse.ok) {
+        const data = await loginResponse.json();
+        throw new Error(data.error || "Invalid credentials");
+      }
+
+      toast.success(
+        isFirstLogin ? "Password set successfully!" : "Logged in successfully!"
+      );
+      router.push(callbackUrl);
+      router.refresh();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,15 +138,24 @@ export default function LoginPage() {
           <Card className="bg-neutral-700 border-2 border-neutral-600">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl text-center text-white">
-                {step === "email" ? "Welcome" : "Welcome back"}
+                {step === "email"
+                  ? "Welcome"
+                  : step === "set-password"
+                  ? "Set Your Password"
+                  : "Welcome Back"}
               </CardTitle>
               <CardDescription className="text-center">
                 {step === "email"
                   ? "Enter your email to continue"
-                  : step === "password"
-                  ? "Enter your password to login"
-                  : "Create a password for your new account"}
+                  : step === "set-password"
+                  ? "Create a password for your account"
+                  : "Enter your password to login"}
               </CardDescription>
+              {error && (
+                <div className="text-red-500 text-sm text-center mt-2">
+                  {error}
+                </div>
+              )}
             </CardHeader>
 
             <form
@@ -99,6 +178,7 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={isLoading}
                         className="bg-neutral-800 border-neutral-600 text-white pl-10"
                       />
                     </div>
@@ -111,8 +191,10 @@ export default function LoginPage() {
                       </Label>
                       {step === "password" && (
                         <Button
+                          type="button"
                           variant="link"
                           className="px-0 font-normal text-primary text-sm text-white"
+                          onClick={() => router.push("/forgot-password")}
                         >
                           Forgot password?
                         </Button>
@@ -126,10 +208,12 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={isLoading}
+                        minLength={8}
                         className="bg-neutral-800 border-neutral-600 pl-10 text-white"
                       />
                     </div>
-                    {step === "create" && (
+                    {step === "set-password" && (
                       <p className="text-sm text-neutral-400">
                         Password must be at least 8 characters long
                       </p>
@@ -153,9 +237,9 @@ export default function LoginPage() {
                     <div className="flex items-center gap-2">
                       {step === "email"
                         ? "Continue"
-                        : step === "password"
-                        ? "Sign in"
-                        : "Create account"}
+                        : step === "set-password"
+                        ? "Set password & Sign in"
+                        : "Sign in"}
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   )}
@@ -172,6 +256,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setStep("email");
                   setPassword("");
+                  setError(null);
                 }}
               >
                 ← Use a different email
@@ -182,7 +267,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Image */}
-      <div className="w-1/2 bg-neutral-900 flex items-center justify-center border-l-4 border-main ">
+      <div className="w-1/2 bg-neutral-900 flex items-center justify-center border-l-4 border-main">
         <img
           src="/campus.jpg"
           alt="College campus"

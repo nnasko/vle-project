@@ -1,9 +1,13 @@
+// components/Navbar.tsx
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   GraduationCap,
   CalendarDays,
@@ -15,19 +19,30 @@ import {
   Bell,
   PencilRuler,
   School2,
-  BarChart3,
   CircleUserRound,
   HomeIcon,
   UserSquare2,
 } from "lucide-react";
 
-type UserRole = "admin" | "teacher" | "student";
+type UserRole = "ADMIN" | "TEACHER" | "STUDENT";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+  studentProfile?: { studentId: string };
+  teacherProfile?: { employeeId: string };
+  adminProfile?: { employeeId: string };
+}
 
 interface NavButtonProps {
   href: string;
   icon: React.ElementType;
   text: string;
   isCollapsed: boolean;
+  onClick?: () => void;
 }
 
 interface NavItem {
@@ -42,128 +57,170 @@ const NavButton: React.FC<NavButtonProps> = ({
   icon: Icon,
   text,
   isCollapsed,
-}) => (
-  <Button
-    asChild
-    className={`w-full justify-start gap-3  text-white font-medium text-lg bg-neutral-800 hover:bg-neutral-700 transition-all ${
-      isCollapsed ? "px-2" : "px-4"
-    }`}
-    variant="ghost"
-  >
-    <Link href={href} className="flex items-center">
-      <Icon size={24} />
-      {!isCollapsed && <span className="font-inter">{text}</span>}
-    </Link>
-  </Button>
-);
+  onClick,
+}) => {
+  const Component = onClick ? Button : Link;
+
+  return (
+    <Button
+      asChild
+      className={`w-full justify-start gap-3 text-white font-medium text-lg bg-neutral-800 hover:bg-neutral-700 transition-all ${
+        isCollapsed ? "px-2" : "px-4"
+      }`}
+      variant="ghost"
+      onClick={onClick}
+    >
+      <Component href={href} className="flex items-center">
+        <Icon size={24} />
+        {!isCollapsed && <span className="font-inter">{text}</span>}
+      </Component>
+    </Button>
+  );
+};
 
 const navigationItems: NavItem[] = [
   {
     href: "/",
     icon: HomeIcon,
     text: "HOME",
-    roles: ["student", "teacher", "admin"],
+    roles: ["STUDENT", "TEACHER", "ADMIN"],
   },
   // Admin navigation
   {
     href: "/departments",
     icon: School2,
     text: "DEPARTMENTS",
-    roles: ["admin"],
+    roles: ["ADMIN"],
   },
   {
     href: "/students",
     icon: GraduationCap,
     text: "STUDENTS",
-    roles: ["admin"],
+    roles: ["ADMIN"],
   },
   {
     href: "/timetables",
     icon: CalendarDays,
     text: "TIMETABLES",
-    roles: ["admin"],
+    roles: ["ADMIN"],
   },
-
   // Teacher navigation
   {
     href: "/cohorts",
     icon: UserSquare2,
     text: "COHORTS",
-    roles: ["teacher"],
+    roles: ["TEACHER"],
   },
   {
     href: "/assignments",
     icon: FileText,
     text: "ASSIGNMENTS",
-    roles: ["teacher"],
+    roles: ["TEACHER"],
   },
   {
     href: "/timetable",
     icon: CalendarDays,
     text: "TIMETABLE",
-    roles: ["teacher"],
+    roles: ["TEACHER"],
   },
   // Student navigation
   {
     href: "/course",
     icon: BookOpen,
     text: "MY COURSE",
-    roles: ["student"],
+    roles: ["STUDENT"],
   },
   {
     href: "/assignments",
     icon: FileText,
     text: "ASSIGNMENTS",
-    roles: ["student"],
+    roles: ["STUDENT"],
   },
   {
     href: "/timetable",
     icon: CalendarDays,
     text: "TIMETABLE",
-    roles: ["student"],
+    roles: ["STUDENT"],
   },
-
   // Shared items
   {
     href: "/messages",
     icon: MessageSquare,
     text: "MESSAGES",
-    roles: ["admin", "teacher", "student"],
+    roles: ["ADMIN", "TEACHER", "STUDENT"],
   },
 ];
 
-const bottomNavItems: NavItem[] = [
-  {
-    href: "/profile",
-    icon: CircleUserRound,
-    text: "PROFILE",
-    roles: ["admin", "teacher", "student"],
-  },
-  {
-    href: "/logout",
-    icon: LogOut,
-    text: "LOGOUT",
-    roles: ["admin", "teacher", "student"],
-  },
-];
-
-interface NavbarProps {
-  userRole: UserRole;
-  userName: string;
-  userAvatar?: string;
-}
-
-const Navbar: React.FC<NavbarProps> = ({
-  userRole,
-  userName,
-  userAvatar = "https://media.tenor.com/Tw8FiJa_KWsAAAAe/alpha-wolf.png",
-}) => {
+const Navbar = () => {
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Fetch user data and notifications on component mount
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("/api/user");
+        if (!response.ok) throw new Error("Failed to fetch user data");
+        const userData = await response.json();
+        setUser(userData);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        router.push("/login");
+      }
+    };
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("/api/notifications/unread-count");
+        if (!response.ok) throw new Error("Failed to fetch notifications");
+        const { count } = await response.json();
+        setNotificationCount(count);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchUserData();
+    fetchNotifications();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      toast.success("Logged out successfully");
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
+    }
+  };
+
+  if (!user) {
+    return null; // or a loading spinner
+  }
 
   const filteredNavItems = navigationItems.filter((item) =>
-    item.roles.includes(userRole)
+    item.roles.includes(user.role)
   );
+
+  const bottomNavItems: NavItem[] = [
+    {
+      href: "/profile",
+      icon: CircleUserRound,
+      text: "PROFILE",
+      roles: ["ADMIN", "TEACHER", "STUDENT"],
+    },
+  ];
 
   return (
     <nav
@@ -189,18 +246,21 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="flex flex-row gap-2 text-xl mb-6">
             <PencilRuler className="text-white" size={32} />
             {!isCollapsed && (
-              <a
+              <Link
                 href="/"
                 className="font-medium text-center text-white mt-0.5 tracking-wide"
               >
                 AAA<span className="font-light">+ College</span>
-              </a>
+              </Link>
             )}
           </div>
 
           <div className="relative mb-6">
             <Avatar className="rounded-md w-12 h-12">
-              <AvatarImage src={userAvatar} alt="User avatar" />
+              <AvatarImage
+                src={user.avatar || "/default-avatar.png"}
+                alt="User avatar"
+              />
             </Avatar>
             <div className="absolute -top-2 -left-2">
               <Button
@@ -226,9 +286,9 @@ const Navbar: React.FC<NavbarProps> = ({
               <span className="text-lg font-light tracking-wider block">
                 WELCOME
               </span>
-              <span className="block">{userName}</span>
+              <span className="block">{user.name}</span>
               <span className="text-xs text-gray-400 capitalize">
-                ({userRole})
+                ({user.role.toLowerCase()})
               </span>
             </div>
           )}
@@ -265,6 +325,14 @@ const Navbar: React.FC<NavbarProps> = ({
             isCollapsed={isCollapsed}
           />
         ))}
+
+        <NavButton
+          href=""
+          icon={LogOut}
+          text="LOGOUT"
+          isCollapsed={isCollapsed}
+          onClick={handleLogout}
+        />
       </div>
     </nav>
   );
