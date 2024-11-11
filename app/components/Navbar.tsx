@@ -109,12 +109,11 @@ const navigationItems: NavItem[] = [
     text: "TIMETABLE",
     roles: ["teacher"],
   },
-
   // Student navigation
   {
-    href: "/courses",
+    href: "/course",
     icon: BookOpen,
-    text: "COURSES",
+    text: "MY COURSE",
     roles: ["student"],
   },
   {

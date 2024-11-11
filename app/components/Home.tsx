@@ -10,6 +10,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
   BookOpen,
   Calendar,
   FileText,
@@ -21,6 +29,7 @@ import {
   GraduationCap,
   BarChart3,
   Settings,
+  HomeIcon,
 } from "lucide-react";
 import { Overview } from "./charts/Overview";
 import { RecentSales } from "./charts/RecentSales";
@@ -32,6 +41,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import DepartmentPerformanceChart from "./charts/DepartmentPerformanceChart";
+import Link from "next/link";
 
 interface QuickActionButtonProps {
   icon: React.ElementType;
@@ -326,7 +336,7 @@ const StudentDashboard = () => (
   </div>
 );
 const Home = () => {
-  const userRole = "admin"; // "teacher" or "student" or "admin"
+  const userRole = "teacher"; // "teacher" or "student" or "admin"
 
   const getName = () => {
     switch (userRole) {
@@ -342,8 +352,24 @@ const Home = () => {
   };
 
   return (
-    <div className="mt-2 bg-white min-h-screen ">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-white min-h-screen">
+      <Breadcrumb className="mb-6 p-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild className="flex items-center gap-2">
+              <Link href="/">
+                <HomeIcon className="h-4 w-4" />
+                Home
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Dashboard</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-black">

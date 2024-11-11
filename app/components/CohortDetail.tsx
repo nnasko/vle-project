@@ -247,7 +247,6 @@ export const CohortDetail: React.FC<{ cohort: Cohort }> = ({ cohort }) => {
                 Plan a new lesson for this cohort
               </DialogDescription>
             </DialogHeader>
-            {/* Lesson form would go here */}
           </DialogContent>
         </Dialog>
       </div>

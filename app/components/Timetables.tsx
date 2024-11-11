@@ -481,7 +481,7 @@ const Timetables = () => {
 
         {/* Search Panel */}
         {isSearchVisible && (
-          <Card className="p-4 bg-neutral-800 mb-6">
+          <Card className="p-4 bg-neutral-700 mb-6">
             <div className="flex flex-wrap gap-4">
               <Input
                 placeholder="Search users..."
@@ -526,8 +526,8 @@ const Timetables = () => {
                     variant="outline"
                     className={`min-w-fit ${
                       selectedUserId === user.id
-                        ? "bg-neutral-700"
-                        : "hover:bg-neutral-700"
+                        ? "bg-main text-white"
+                        : "hover:bg-main hover:text-white"
                     }`}
                     onClick={() => setSelectedUserId(user.id)}
                   >
