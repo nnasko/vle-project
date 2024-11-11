@@ -30,7 +30,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 interface Log {
   date: string;
@@ -587,7 +587,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
             onClick={handleSubmit}
             className="bg-main hover:bg-second text-white"
           >
-            Create Student
+            Add Student
           </Button>
         </DialogFooter>
       ) : (
@@ -610,14 +610,15 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
     <Dialog>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-main hover:bg-second text-white">CREATE</Button>
+          <Button className="bg-main hover:bg-second text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Student
+          </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl bg-white">
         <DialogHeader>
-          <DialogTitle className="text-gray-900">
-            Create New Student
-          </DialogTitle>
+          <DialogTitle className="text-gray-900">Add A New Student</DialogTitle>
           <DialogDescription className="text-gray-500">
             Add a new student to the system. Fill in all required information
             below.

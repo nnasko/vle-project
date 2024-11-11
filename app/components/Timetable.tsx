@@ -113,8 +113,8 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
 
   return (
     <div>
-      <span className="text-2xl font-bold mx-32 p-6">YOUR TIMETABLE</span>
-      <div className="space-y-6 p-6 mx-32 overflow-auto">
+      <span className="text-2xl font-bold p-6">TIMETABLE</span>
+      <div className="space-y-6 p-6 overflow-auto">
         <div className="bg-neutral-700 rounded-md p-4">
           {/* Attendance Overview */}
           <Card className="bg-neutral-700 border-2 border-second">

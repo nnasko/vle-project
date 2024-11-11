@@ -78,12 +78,6 @@ const navigationItems: NavItem[] = [
     roles: ["admin"],
   },
   {
-    href: "/analytics",
-    icon: BarChart3,
-    text: "ANALYTICS",
-    roles: ["admin"],
-  },
-  {
     href: "/timetables",
     icon: CalendarDays,
     text: "TIMETABLES",
@@ -173,7 +167,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <nav
-      className={`relative top-0 left-0 bg-neutral-800 min-h-screen border-r-[#473BF0] border-r-2 transition-all duration-300 font-inter ${
+      className={`fixed top-0 left-0 bg-neutral-800 min-h-screen border-r-[#473BF0] border-r-2 transition-all duration-300 font-inter ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >

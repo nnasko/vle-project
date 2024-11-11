@@ -160,7 +160,9 @@ const page = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <TimeTable events={events} />
+      <div className="px-32">
+        <TimeTable events={events} />
+      </div>
     </div>
   );
 };

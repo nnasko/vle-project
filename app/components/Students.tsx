@@ -401,9 +401,12 @@ const Students: React.FC = () => {
 
   return (
     <div className="p-6 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">MANAGE STUDENTS</h1>
+          <div>
+            <h1 className="text-2xl font-bold">MANAGE STUDENTS</h1>
+            <p className="text-gray-500">Organize and manage students.</p>
+          </div>
           <StudentDialog
             mode="create"
             existingIds={existingIds}

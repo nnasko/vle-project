@@ -165,11 +165,12 @@ const formatTimestamp = (timestamp: string) => {
 };
 
 const Messages = () => {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
-  const [threads, setThreads] = useState(mockThreads);
+  const [activeUsers, setActiveUsers] = useState<User[]>([]);
   const [availableUsers, setAvailableUsers] = useState(mockUsers);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [threads, setThreads] = useState(mockThreads);
 
   const filteredUsers = availableUsers.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -203,13 +204,30 @@ const Messages = () => {
     setNewMessage("");
   };
 
+  const handleStartChat = (userId: string) => {
+    const user = mockUsers.find((u) => u.id === parseInt(userId));
+    if (!user) return;
+
+    setActiveUsers((prev) => {
+      // Check if user is already active
+      if (prev.some((u) => u.id === user.id)) return prev;
+      return [...prev, user];
+    });
+    setSelectedUser(user);
+  };
+
   const handleDeleteChat = (userId: number) => {
+    // Remove from threads
     setThreads((prev) => {
       const newThreads = { ...prev };
       delete newThreads[userId];
       return newThreads;
     });
 
+    // Remove from active users
+    setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
+
+    // Clear selected user if it was the deleted one
     if (selectedUser?.id === userId) {
       setSelectedUser(null);
     }
@@ -217,7 +235,7 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen">
-      <Breadcrumb className="mb-6 p-6">
+      <Breadcrumb className="p-6">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild className="flex items-center gap-2">
@@ -245,50 +263,56 @@ const Messages = () => {
           )}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="p-6 container mx-auto">
-        {/* Breadcrumbs */}
-
+      <div className="p-6 container mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-6">
-          <span className="text-2xl font-bold"> MESSAGES</span>
+          <div>
+            <h1 className="text-2xl font-bold">MESSAGES</h1>
+            <p className="text-gray-500">
+              Manage your conversations and send messages.
+            </p>
+          </div>
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-main hover:bg-second">
                 <Plus className="w-4 h-4 mr-2" />
-                New Message
+                New Chat
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New Message</DialogTitle>
+                <DialogTitle>New Chat</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <Select>
+                <Select onValueChange={handleStartChat}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select recipient" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback>
-                              {user.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          {user.name}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {mockUsers
+                      .filter(
+                        (user) =>
+                          !activeUsers.some(
+                            (activeUser) => activeUser.id === user.id
+                          )
+                      )
+                      .map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={user.avatar} />
+                              <AvatarFallback>
+                                {user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            {user.name}
+                          </div>
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
-                <div className="space-y-2">
-                  <Input placeholder="Type your message..." />
-                  <Button className="w-full">Send Message</Button>
-                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -297,7 +321,7 @@ const Messages = () => {
         <div className="bg-neutral-700 rounded-lg h-[calc(100vh-200px)]">
           <div className="grid grid-cols-3 gap-6 h-full">
             {/* Users List */}
-            <div className="col-span-1 border-r border-neutral-800 p-6">
+            <div className="col-span-1 border-r-2 border-neutral-800 p-6">
               <div className="h-full flex flex-col">
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
@@ -309,81 +333,85 @@ const Messages = () => {
                   />
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2">
-                  {filteredUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedUser?.id === user.id
-                          ? "bg-neutral-800"
-                          : "hover:bg-neutral-800"
-                      }`}
-                      onClick={() => setSelectedUser(user)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Avatar>
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback>
-                              {user.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div
-                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-700 ${
-                              user.status === "online"
-                                ? "bg-green-500"
-                                : user.status === "away"
-                                ? "bg-yellow-500"
-                                : "bg-neutral-400"
-                            }`}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-white truncate">
-                              {user.name}
-                              {user.unreadCount && (
-                                <span className="bg-main text-white text-xs px-2 mx-2 py-1 rounded-full">
-                                  {user.unreadCount}
-                                </span>
-                              )}
-                            </p>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 hover:bg-neutral-700"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreVertical className="h-4 w-4 text-white" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="">
-                                <DropdownMenuItem
-                                  className="text-red-500"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteChat(user.id);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Chat
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                  {activeUsers
+                    .filter((user) =>
+                      user.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((user) => (
+                      <div
+                        key={user.id}
+                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedUser?.id === user.id
+                            ? "bg-neutral-800"
+                            : "hover:bg-neutral-800"
+                        }`}
+                        onClick={() => setSelectedUser(user)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <Avatar>
+                              <AvatarImage src={user.avatar} />
+                              <AvatarFallback>
+                                {user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div
+                              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-700 ${
+                                user.status === "online"
+                                  ? "bg-green-500"
+                                  : user.status === "away"
+                                  ? "bg-yellow-500"
+                                  : "bg-neutral-400"
+                              }`}
+                            />
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-sm text-neutral-400">
-                              <Clock className="w-3 h-3" />
-                              <span>{user.lastActive}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium text-white truncate">
+                                {user.name}
+                                {user.unreadCount && (
+                                  <span className="bg-main text-white text-xs px-2 mx-2 py-1 rounded-full">
+                                    {user.unreadCount}
+                                  </span>
+                                )}
+                              </p>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 hover:bg-neutral-700"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreVertical className="h-4 w-4 text-white" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="">
+                                  <DropdownMenuItem
+                                    className="text-red-500"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteChat(user.id);
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Chat
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1 text-sm text-neutral-400">
+                                <Clock className="w-3 h-3" />
+                                <span>{user.lastActive}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>
