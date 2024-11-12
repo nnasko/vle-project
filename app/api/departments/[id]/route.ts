@@ -20,6 +20,7 @@ export async function GET(
                 avatar: true,
               },
             },
+            cohorts: true,
             teachingModules: {
               include: {
                 module: {

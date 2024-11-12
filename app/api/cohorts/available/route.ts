@@ -18,9 +18,18 @@ export async function GET() {
       select: {
         id: true,
         name: true,
-        course: {
+        department: {
           select: {
             name: true,
+          },
+        },
+        teacher: {
+          select: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },

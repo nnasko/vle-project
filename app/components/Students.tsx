@@ -92,7 +92,7 @@ const StudentCard: React.FC<{
               {student.user.name}
             </div>
             <div className="text-sm text-gray-500">
-              {student.cohort?.course.name || "No Course Assigned"}
+              {student.cohort?.name || "No Course Assigned"}
             </div>
             <div className="text-sm text-gray-400">{student.studentId}</div>
           </div>
@@ -220,7 +220,7 @@ const StudentRow: React.FC<{
             </div>
             <div>
               <div className="text-sm text-gray-500">
-                {student.cohort?.course.name || "No Course"}
+                {student.cohort?.name || "No Cohort"}
               </div>
               <div className="text-sm text-gray-500">
                 {student.currentGrade.replace("_", " ")}
@@ -380,8 +380,7 @@ const Students: React.FC = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesCourse =
-      selectedCourse === "all" ||
-      student.cohort?.course.name === selectedCourse;
+      selectedCourse === "all" || student.cohort?.name === selectedCourse;
     return matchesSearch && matchesCourse;
   });
 
@@ -420,7 +419,7 @@ const Students: React.FC = () => {
             />
             <Select value={selectedCourse} onValueChange={setSelectedCourse}>
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Select course" />
+                <SelectValue placeholder="Select Cohort" />
               </SelectTrigger>
               <SelectContent>
                 {COURSE_OPTIONS.map((option) => (

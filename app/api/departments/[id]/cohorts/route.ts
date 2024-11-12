@@ -29,13 +29,18 @@ export async function POST(
     const cohort = await prisma.cohort.create({
       data: {
         name,
-        teacherId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         maxStudents: parseInt(maxStudents),
         department: {
           connect: {
             id: params.id,
+          },
+        },
+        teacher: {
+          // Add this explicit connection
+          connect: {
+            id: teacherId,
           },
         },
       },

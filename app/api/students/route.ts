@@ -1,8 +1,6 @@
 // app/api/students/route.ts
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcryptjs";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
@@ -21,9 +19,18 @@ export async function GET() {
         cohort: {
           select: {
             name: true,
-            course: {
+            department: {
               select: {
                 name: true,
+              },
+            },
+            teacher: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -77,10 +84,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, password, currentGrade, cohortId } = body;
-
-    // Hash the password
-    const hashedPassword = await hash(password, 12);
+    const { name, email, phone, currentGrade, cohortId } = body;
 
     // Create user and student profile in a transaction
     const result = await prisma.$transaction(async (prisma) => {
@@ -90,7 +94,6 @@ export async function POST(request: Request) {
           name,
           email,
           phone,
-          password: hashedPassword,
           role: "STUDENT",
         },
       });
@@ -123,9 +126,18 @@ export async function POST(request: Request) {
           cohort: {
             select: {
               name: true,
-              course: {
+              department: {
                 select: {
                   name: true,
+                },
+              },
+              teacher: {
+                select: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
                 },
               },
             },

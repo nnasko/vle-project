@@ -1,4 +1,3 @@
-// components/StaffTab.tsx
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,7 +126,7 @@ const StaffTab: React.FC<StaffTabProps> = ({
             <TableHead>Name</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Contact</TableHead>
-            <TableHead>Modules</TableHead>
+            <TableHead>Cohorts</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -164,11 +163,14 @@ const StaffTab: React.FC<StaffTabProps> = ({
               </TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {teacher.teachingModules.map((tm) => (
-                    <Badge key={tm.id} variant="secondary">
-                      {tm.module.code}
+                  {teacher.cohorts?.map((cohort) => (
+                    <Badge key={cohort.id} variant="secondary">
+                      {cohort.name}
                     </Badge>
                   ))}
+                  {(!teacher.cohorts || teacher.cohorts.length === 0) && (
+                    <span className="text-sm text-gray-500">No cohorts</span>
+                  )}
                 </div>
               </TableCell>
               <TableCell>

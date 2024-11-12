@@ -58,7 +58,6 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
     phone: student?.user.phone || "",
     currentGrade: student?.currentGrade || GradeLevel.FIRST_YEAR,
     cohortId: student?.cohortId || undefined,
-    password: "", // Only used for create mode
   });
 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -74,7 +73,6 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
         phone: student.user.phone || "",
         currentGrade: student.currentGrade,
         cohortId: student.cohortId,
-        password: "",
       });
     }
   }, [open, student, mode]);
@@ -119,7 +117,6 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
           cohortId: formData.cohortId,
         };
       } else {
-        // For create mode, include all fields
         submitData = formData;
       }
 
@@ -183,7 +180,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
             <Label>Phone Number</Label>
             <Input
               type="tel"
-              value={formData.phone || ""}
+              value={formData.phone}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, phone: e.target.value }))
               }
@@ -204,28 +201,9 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
               <SelectContent>
                 <SelectItem value="FIRST_YEAR">First Year</SelectItem>
                 <SelectItem value="SECOND_YEAR">Second Year</SelectItem>
-                <SelectItem value="THIRD_YEAR">Third Year</SelectItem>
-                <SelectItem value="FOURTH_YEAR">Fourth Year</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          {mode === "create" && (
-            <div className="space-y-2">
-              <Label>Initial Password</Label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, password: e.target.value }))
-                }
-                required={mode === "create"}
-              />
-              <p className="text-sm text-gray-500">
-                Student will be prompted to change this on first login
-              </p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label>Assign to Cohort</Label>
@@ -244,7 +222,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
               <SelectContent>
                 {cohorts.map((cohort) => (
                   <SelectItem key={cohort.id} value={cohort.id}>
-                    {cohort.name} - {cohort.course.name}
+                    {cohort.name}
                   </SelectItem>
                 ))}
               </SelectContent>
