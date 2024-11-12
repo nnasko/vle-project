@@ -18,15 +18,10 @@ export async function GET() {
             },
           },
         },
-        courses: {
+        modules: true,
+        cohorts: {
           include: {
-            modules: true,
-          },
-        },
-        _count: {
-          select: {
-            teachers: true,
-            courses: true,
+            students: true,
           },
         },
       },
@@ -35,12 +30,25 @@ export async function GET() {
     const formattedDepartments = departments.map((dept) => ({
       id: dept.id,
       name: dept.name,
+      code: dept.code,
       head: dept.headOfDepartment,
-      staffCount: dept._count.teachers,
-      studentCount: 0, // You'll need to calculate this based on your data structure
-      modules: dept.courses.flatMap((course) => course.modules),
-      status: dept.isActive ? "active" : "inactive",
       description: dept.description,
+      duration: dept.duration,
+      staffCount: dept.staffCount,
+      studentCount: dept.studentCount,
+      modules: dept.modules.map((module) => ({
+        id: module.id,
+        name: module.name,
+        code: module.code,
+      })),
+      status: dept.status,
+      cohorts: dept.cohorts.map((cohort) => ({
+        id: cohort.id,
+        name: cohort.name,
+        studentCount: cohort.currentStudents,
+        startDate: cohort.startDate,
+        endDate: cohort.endDate,
+      })),
     }));
 
     return NextResponse.json(formattedDepartments);
@@ -56,13 +64,16 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, description, headOfDepartment } = body;
+    const { name, code, description, headOfDepartment, duration } = body;
 
     const department = await prisma.department.create({
       data: {
         name,
+        code,
         description,
         headOfDepartment,
+        duration: duration || "FULL_TIME",
+        status: "active",
         isActive: true,
       },
     });

@@ -32,24 +32,29 @@ export async function GET(
             },
           },
         },
-        courses: {
+        modules: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            description: true,
+            year: true,
+            credits: true,
+            status: true,
+          },
+        },
+        cohorts: {
           include: {
-            modules: {
+            teacher: {
               include: {
-                learningOutcomes: true,
-                assessments: true,
-                topics: true,
-                prerequisites: {
-                  include: {
-                    prerequisite: {
-                      select: {
-                        code: true,
-                      },
-                    },
+                user: {
+                  select: {
+                    name: true,
                   },
                 },
               },
             },
+            students: true,
           },
         },
         enrollmentTrends: {

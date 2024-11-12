@@ -185,36 +185,22 @@ model Topic {
 model Department {
   id               String         @id @default(cuid())
   name             String         @unique
+  code             String         @unique      // Add this for course code
   description      String?
   headOfDepartment String
+  duration         CourseDuration @default(FULL_TIME)
   teachers         Teacher[]
   admins           Admin[]
-  courses          Course[]
-  staffCount       Int           @default(0)  // Added from UI
-  studentCount     Int           @default(0)  // Added from UI
-  status           String        @default("active") // Added from UI
+  modules          Module[]       // This now directly links to modules
+  cohorts          Cohort[]
+  staffCount       Int           @default(0)
+  studentCount     Int           @default(0)
+  status           String        @default("active")
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   isActive         Boolean        @default(true)
-
-  // Added from UI
   enrollmentTrends EnrollmentTrend[]
   attendanceRates  AttendanceRate[]
-}
-
-model Course {
-  id               String         @id @default(cuid())
-  name             String
-  code             String         @unique
-  description      String?
-  department       Department     @relation(fields: [departmentId], references: [id])
-  departmentId     String
-  duration         CourseDuration
-  cohorts          Cohort[]
-  modules          Module[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  isActive         Boolean        @default(true)
 }
 
 model Module {
@@ -222,27 +208,30 @@ model Module {
   name             String
   code             String
   description      String?
-  year             Int           // Added from UI
-  credits          Int           // Added from UI
-  passingRate      Float?        // Added from UI
-  averageScore     Float?        // Added from UI
+  year             Int           
+  credits          Int           
+  passingRate      Float?        
+  averageScore     Float?        
   status           ModuleStatus  @default(ACTIVE)
   prerequisites    ModulePrerequisite[] @relation("ModuleToPrerequisite")
   prerequisiteFor  ModulePrerequisite[] @relation("PrerequisiteToModule")
   
-  // Relations
-  course           Course         @relation(fields: [courseId], references: [id])
-  courseId         String
+  // Change this relation from Course to Department
+  department       Department     @relation(fields: [departmentId], references: [id])
+  departmentId     String
+  
   teachers         TeacherModule[]
   lessons          Lesson[]
   
-  // Added from UI
   learningOutcomes LearningOutcome[]
   assessments      Assessment[]
   topics           Topic[]
 
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+
+  // Add an index for better query performance
+  @@index([departmentId])
 }
 
 model TeacherModule {
@@ -260,13 +249,15 @@ model TeacherModule {
 
 model Cohort {
   id               String         @id @default(cuid())
-  name             String
-  course           Course         @relation(fields: [courseId], references: [id])
-  courseId         String
+  name             String         // e.g., SD2401
+  department       Department     @relation(fields: [departmentId], references: [id])
+  departmentId     String
   teacher          Teacher        @relation(fields: [teacherId], references: [id])
   teacherId        String
   startDate        DateTime
   endDate          DateTime
+  maxStudents      Int           // Add this field
+  currentStudents  Int           @default(0)  // Add this field to track enrolled students
   students         Student[]
   lessons          Lesson[]
   createdAt        DateTime       @default(now())

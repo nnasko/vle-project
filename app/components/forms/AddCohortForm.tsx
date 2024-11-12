@@ -1,170 +1,147 @@
-// components/forms/AddCohortForm.tsx
-import React from "react";
-import { zodResolver } from "@hookform/resolve";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+// components/AddCohortForm.tsx
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { createCohort } from "@/services/departmentApi";
 import { toast } from "react-toastify";
-
-const cohortSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  courseId: z.string().min(1, "Course is required"),
-  teacherId: z.string().min(1, "Teacher is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-});
-
-interface CourseOption {
-  id: string;
-  name: string;
-}
-
-interface TeacherOption {
-  id: string;
-  name: string;
-}
 
 interface AddCohortFormProps {
   departmentId: string;
-  courses: CourseOption[];
-  teachers: TeacherOption[];
+  departmentName: string;
+  teacherId: string;
+  teacherName: string;
   onSuccess: () => void;
+  onCancel: () => void;
 }
 
-export function AddCohortForm({
+export const AddCohortForm: React.FC<AddCohortFormProps> = ({
   departmentId,
-  courses,
-  teachers,
+  departmentName,
+  teacherId,
+  teacherName,
   onSuccess,
-}: AddCohortFormProps) {
-  const form = useForm({
-    resolver: zodResolver(cohortSchema),
-    defaultValues: {
-      name: "",
-      courseId: "",
-      teacherId: "",
-      startDate: "",
-      endDate: "",
-    },
+  onCancel,
+}) => {
+  const currentYear = new Date().getFullYear();
+  const shortYear = currentYear.toString().slice(-2);
+  const nextYear = (currentYear + 1).toString().slice(-2);
+
+  const [formData, setFormData] = useState({
+    // Generate a default cohort code like "SD2401" for Software Development 2024 Group 1
+    name: `${departmentName
+      .split(" ")
+      .map((word) => word[0])
+      .join("")}${shortYear}01`,
+    startDate: "",
+    endDate: "",
+    maxStudents: "30", // Default max students
   });
 
-  const onSubmit = async (values: z.infer<typeof cohortSchema>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      const response = await fetch(`/api/departments/${departmentId}/cohorts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
+      await createCohort(departmentId, {
+        ...formData,
+        teacherId,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to create cohort");
-      }
-
       toast.success("Cohort created successfully");
-      form.reset();
       onSuccess();
     } catch (error) {
       console.error("Error creating cohort:", error);
       toast.error("Failed to create cohort");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Cohort Name</Label>
-        <Input {...form.register("name")} />
-        {form.formState.errors.name && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Course</Label>
-        <Select
-          onValueChange={(value) => form.setValue("courseId", value)}
-          value={form.watch("courseId")}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a course" />
-          </SelectTrigger>
-          <SelectContent>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {course.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {form.formState.errors.courseId && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.courseId.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Teacher</Label>
-        <Select
-          onValueChange={(value) => form.setValue("teacherId", value)}
-          value={form.watch("teacherId")}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a teacher" />
-          </SelectTrigger>
-          <SelectContent>
-            {teachers.map((teacher) => (
-              <SelectItem key={teacher.id} value={teacher.id}>
-                {teacher.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {form.formState.errors.teacherId && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.teacherId.message}
-          </p>
-        )}
+        <Label htmlFor="name">Cohort Code</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="e.g., SD2401"
+          required
+        />
+        <p className="text-sm text-gray-500">
+          Suggested format: Department Code + Year + Group Number (e.g., SD2401)
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Start Date</Label>
-          <Input type="date" {...form.register("startDate")} />
-          {form.formState.errors.startDate && (
-            <p className="text-sm text-red-500">
-              {form.formState.errors.startDate.message}
-            </p>
-          )}
+          <Label htmlFor="startDate">Start Date</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={formData.startDate}
+            onChange={(e) =>
+              setFormData({ ...formData, startDate: e.target.value })
+            }
+            required
+          />
         </div>
-
         <div className="space-y-2">
-          <Label>End Date</Label>
-          <Input type="date" {...form.register("endDate")} />
-          {form.formState.errors.endDate && (
-            <p className="text-sm text-red-500">
-              {form.formState.errors.endDate.message}
-            </p>
-          )}
+          <Label htmlFor="endDate">End Date</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={formData.endDate}
+            onChange={(e) =>
+              setFormData({ ...formData, endDate: e.target.value })
+            }
+            min={formData.startDate}
+            required
+          />
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        Create Cohort
-      </Button>
+      <div className="space-y-2">
+        <Label htmlFor="maxStudents">Maximum Students</Label>
+        <Input
+          id="maxStudents"
+          type="number"
+          value={formData.maxStudents}
+          onChange={(e) =>
+            setFormData({ ...formData, maxStudents: e.target.value })
+          }
+          min="1"
+          required
+        />
+      </div>
+
+      <div className="mt-6 bg-gray-50 p-4 rounded-md">
+        <h4 className="font-medium text-gray-900">Cohort Details</h4>
+        <div className="mt-2 space-y-2 text-sm text-gray-600">
+          <p>Department: {departmentName}</p>
+          <p>Teacher: {teacherName}</p>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="bg-main hover:bg-second"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create Cohort"}
+        </Button>
+      </div>
     </form>
   );
-}
+};

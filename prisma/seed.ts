@@ -27,6 +27,7 @@ async function main() {
       const department = await prisma.department.create({
         data: {
           name: "Administration",
+          code: "ADM", // Added required code field
           description: "System Administration Department",
           headOfDepartment: admin.name,
         },
@@ -76,6 +77,7 @@ async function main() {
         csDepartment = await prisma.department.create({
           data: {
             name: "Computer Science",
+            code: "CS", // Added required code field
             description:
               "Department of Computer Science and Software Engineering",
             headOfDepartment: teacher.name,

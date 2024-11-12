@@ -1,3 +1,4 @@
+// app/api/departments/[id]/cohorts/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -7,15 +8,36 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { name, courseId, teacherId, startDate, endDate } = body;
+    const { name, teacherId, startDate, endDate, maxStudents } = body;
 
+    // Verify the teacher belongs to this department
+    const teacher = await prisma.teacher.findFirst({
+      where: {
+        id: teacherId,
+        departmentId: params.id,
+      },
+    });
+
+    if (!teacher) {
+      return NextResponse.json(
+        { error: "Teacher not found in this department" },
+        { status: 404 }
+      );
+    }
+
+    // Create the cohort
     const cohort = await prisma.cohort.create({
       data: {
         name,
-        courseId,
         teacherId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        maxStudents: parseInt(maxStudents),
+        department: {
+          connect: {
+            id: params.id,
+          },
+        },
       },
       include: {
         teacher: {
@@ -27,7 +49,7 @@ export async function POST(
             },
           },
         },
-        course: true,
+        department: true,
       },
     });
 

@@ -55,15 +55,26 @@ interface Module {
   code: string;
 }
 
+interface Cohort {
+  id: string;
+  name: string;
+  studentCount: number;
+  startDate: string;
+  endDate: string;
+}
+
 interface Department {
   id: string;
   name: string;
+  code: string;
   head: string;
+  description?: string;
+  duration: "FULL_TIME" | "PART_TIME";
   staffCount: number;
   studentCount: number;
   modules: Module[];
-  status: "active" | "inactive";
-  description?: string;
+  cohorts: Cohort[];
+  status: string;
 }
 
 const DepartmentsPage = () => {
@@ -80,10 +91,20 @@ const DepartmentsPage = () => {
     try {
       const response = await fetch("/api/departments");
       const data = await response.json();
-      setDepartments(data);
+
+      // Ensure we're setting an array
+      if (Array.isArray(data)) {
+        setDepartments(data);
+      } else if (data.departments && Array.isArray(data.departments)) {
+        setDepartments(data.departments);
+      } else {
+        setDepartments([]);
+        console.error("Invalid data format received:", data);
+      }
     } catch (error) {
       console.error("Error fetching departments:", error);
       toast.error("Failed to load departments");
+      setDepartments([]); // Set to empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -156,14 +177,16 @@ const DepartmentsPage = () => {
     }
   };
 
-  const filteredDepartments = departments.filter((dept) => {
-    const matchesSearch =
-      dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dept.head.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || dept.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredDepartments = Array.isArray(departments)
+    ? departments.filter((dept) => {
+        const matchesSearch =
+          dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          dept.head.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus =
+          statusFilter === "all" || dept.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+    : [];
 
   if (isLoading) {
     return (
@@ -214,24 +237,53 @@ const DepartmentsPage = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleCreateDepartment(new FormData(e.currentTarget));
+                  const formData = new FormData(e.currentTarget);
+                  handleCreateDepartment({
+                    name: formData.get("name") as string,
+                    code: formData.get("code") as string,
+                    description: formData.get("description") as string,
+                    headOfDepartment: formData.get("head") as string,
+                    duration: formData.get("duration") as
+                      | "FULL_TIME"
+                      | "PART_TIME",
+                  });
                 }}
                 className="space-y-4 mt-4"
               >
                 <div className="space-y-2">
-                  <Label>Department Name</Label>
+                  <Label>Course Name</Label>
                   <Input name="name" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Course Code</Label>
+                  <Input
+                    name="code"
+                    required
+                    placeholder="e.g., CS, ENG, BUS"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
                   <Input name="description" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Department Head</Label>
+                  <Label>Course Leader</Label>
                   <Input name="head" required />
                 </div>
+                <div className="space-y-2">
+                  <Label>Duration</Label>
+                  <Select name="duration" defaultValue="FULL_TIME">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                      <SelectItem value="PART_TIME">Part Time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button type="submit" className="w-full">
-                  Create Department
+                  Create Course
                 </Button>
               </form>
             </SheetContent>
@@ -270,6 +322,7 @@ const DepartmentsPage = () => {
                       <h3 className="text-lg font-semibold group-hover:text-main">
                         {department.name}
                       </h3>
+                      <Badge variant="outline">{department.code}</Badge>
                       <Badge
                         className="bg-main text-white"
                         variant={
@@ -282,7 +335,11 @@ const DepartmentsPage = () => {
                       </Badge>
                     </Link>
                     <p className="text-sm text-gray-500">
-                      Head: {department.head}
+                      Leader: {department.head}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Duration:{" "}
+                      {department.duration.replace("_", " ").toLowerCase()}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -348,6 +405,24 @@ const DepartmentsPage = () => {
                     </span>
                   </div>
                 </div>
+
+                {department.cohorts.length > 0 && (
+                  <div className="border-t pt-4 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-medium">
+                        Active Cohorts
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {department.cohorts.map((cohort) => (
+                        <Badge key={cohort.id} variant="secondary">
+                          {cohort.name} ({cohort.studentCount} students)
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {department.modules.length > 0 && (
                   <div className="border-t pt-4">

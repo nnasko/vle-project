@@ -1,132 +1,119 @@
-// components/forms/AddTeacherForm.tsx
-import React from "react";
-import { zodResolver } from "@hookform/resolve";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+// components/AddTeacherForm.tsx
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-toastify";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createTeacher } from "@/services/departmentApi";
+import { toast } from "react-toastify";
 
-const teacherSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  position: z.string().min(2, "Position is required"),
-  specializations: z.string().transform((str) => str.split(",")),
-  qualifications: z.string().transform((str) => str.split(",")),
-  biography: z.string().optional(),
-  officeHours: z.string().optional(),
-});
-
-export function AddTeacherForm({
-  departmentId,
-  onSuccess,
-}: {
+interface AddTeacherFormProps {
   departmentId: string;
   onSuccess: () => void;
-}) {
-  const form = useForm({
-    resolver: zodResolver(teacherSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      position: "",
-      specializations: "",
-      qualifications: "",
-      biography: "",
-      officeHours: "",
-    },
+  onCancel: () => void;
+}
+
+export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
+  departmentId,
+  onSuccess,
+  onCancel,
+}) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    position: "",
+    specializations: [] as string[],
+    qualifications: [] as string[],
+    biography: "",
+    officeHours: "",
   });
 
-  const onSubmit = async (values: z.infer<typeof teacherSchema>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      const response = await fetch(
-        `/api/departments/${departmentId}/teachers`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to create teacher");
-      }
-
+      await createTeacher(departmentId, formData);
       toast.success("Teacher added successfully");
-      form.reset();
       onSuccess();
     } catch (error) {
-      console.error("Error adding teacher:", error);
       toast.error("Failed to add teacher");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Name</Label>
-        <Input {...form.register("name")} />
-        {form.formState.errors.name && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.name.message}
-          </p>
-        )}
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
       </div>
 
       <div className="space-y-2">
-        <Label>Email</Label>
-        <Input {...form.register("email")} type="email" />
-        {form.formState.errors.email && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.email.message}
-          </p>
-        )}
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+        />
       </div>
 
       <div className="space-y-2">
-        <Label>Phone (Optional)</Label>
-        <Input {...form.register("phone")} />
+        <Label htmlFor="phone">Phone</Label>
+        <Input
+          id="phone"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        />
       </div>
 
       <div className="space-y-2">
-        <Label>Position</Label>
-        <Input {...form.register("position")} />
-        {form.formState.errors.position && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.position.message}
-          </p>
-        )}
+        <Label htmlFor="position">Position</Label>
+        <Select
+          onValueChange={(value) =>
+            setFormData({ ...formData, position: value })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select position" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="head">Department Head</SelectItem>
+            <SelectItem value="senior">Senior Lecturer</SelectItem>
+            <SelectItem value="lecturer">Lecturer</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Specializations (comma-separated)</Label>
-        <Input {...form.register("specializations")} />
+      <div className="flex justify-end gap-2 mt-6">
+        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="bg-main hover:bg-second"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Adding..." : "Add Teacher"}
+        </Button>
       </div>
-
-      <div className="space-y-2">
-        <Label>Qualifications (comma-separated)</Label>
-        <Input {...form.register("qualifications")} />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Biography</Label>
-        <Textarea {...form.register("biography")} />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Office Hours</Label>
-        <Input {...form.register("officeHours")} />
-      </div>
-
-      <Button type="submit" className="w-full">
-        Add Teacher
-      </Button>
     </form>
   );
-}
+};
