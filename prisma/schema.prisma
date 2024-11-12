@@ -25,13 +25,17 @@ enum AttendanceStatus {
 enum GradeLevel {
   FIRST_YEAR
   SECOND_YEAR
-  THIRD_YEAR
-  FOURTH_YEAR
 }
 
 enum CourseDuration {
   FULL_TIME
   PART_TIME
+}
+
+enum ModuleStatus {
+  ACTIVE
+  REVIEW
+  ARCHIVED
 }
 
 model User {
@@ -58,6 +62,35 @@ model User {
   receivedMessages Message[]       @relation("MessageReceiver")
 }
 
+model EnrollmentTrend {
+  id            String      @id @default(cuid())
+  department    Department  @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  month         DateTime
+  studentCount  Int
+}
+
+model AttendanceRate {
+  id            String      @id @default(cuid())
+  department    Department  @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  week          DateTime
+  rate          Float
+}
+
+model StudentLog {
+  id          String    @id @default(cuid())
+  type        String    // POSITIVE, NEGATIVE, BEHAVIOUR, etc.
+  title       String
+  description String
+  student     Student   @relation(fields: [studentId], references: [id])
+  studentId   String
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Student {
   id                String         @id @default(cuid())
   user              User           @relation(fields: [userId], references: [id])
@@ -67,10 +100,22 @@ model Student {
   cohortId          String?
   expectedGraduation DateTime
   currentGrade      GradeLevel
-  overallGrade      Float?
-  attendance        Attendance[]
-  assignments       Assignment[]
-  grades           Grade[]
+  overallGrade      Float?         // Overall academic performance
+  attendance        Attendance[]   // Attendance records
+  assignments       Assignment[]   // Assignments submitted
+  grades           Grade[]        // Individual grades
+  logs             StudentLog[]   // Student activity logs
+  
+  // Additional fields for student profile
+  courseProgress    Float?         @default(0)      // Progress in current course (0-100)
+  enrollmentDate    DateTime       @default(now())  // When student enrolled
+  academicStanding  String?        // e.g., "Good Standing", "Probation"
+  specialNeeds      String?        // Any special requirements or accommodations
+  notes            String?        // Additional notes about the student
+  emergencyContact  String?        // Emergency contact information
+  previousEducation String?        // Previous educational background
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime?       @updatedAt
 }
 
 model Teacher {
@@ -78,12 +123,19 @@ model Teacher {
   user             User           @relation(fields: [userId], references: [id])
   userId           String         @unique
   employeeId       String         @unique
+  position         String         // Added from UI: e.g., "Senior Lecturer"
+  specializations  String[]
+  biography        String?        // Added for teacher profile
+  officeHours     String?        // Added for teacher availability
+  qualifications  String[]       // Added for academic qualifications
+  
+  // Relations
   department       Department     @relation(fields: [departmentId], references: [id])
   departmentId     String
-  position         String
-  specializations  String[]
+  teachingModules  TeacherModule[]
   cohorts          Cohort[]
   lessons          Lesson[]
+  logs             StudentLog[]
 }
 
 model Admin {
@@ -97,6 +149,39 @@ model Admin {
   responsibilities String[]
 }
 
+model ModulePrerequisite {
+  id            String   @id @default(cuid())
+  module        Module   @relation("ModuleToPrerequisite", fields: [moduleId], references: [id])
+  moduleId      String
+  prerequisite  Module   @relation("PrerequisiteToModule", fields: [prerequisiteId], references: [id])
+  prerequisiteId String
+
+  @@unique([moduleId, prerequisiteId])
+}
+
+model LearningOutcome {
+  id          String   @id @default(cuid())
+  description String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  moduleId    String
+}
+
+model Assessment {
+  id          String   @id @default(cuid())
+  type        String
+  weight      Float
+  description String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  moduleId    String
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  name        String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  moduleId    String
+}
+
 model Department {
   id               String         @id @default(cuid())
   name             String         @unique
@@ -105,9 +190,16 @@ model Department {
   teachers         Teacher[]
   admins           Admin[]
   courses          Course[]
+  staffCount       Int           @default(0)  // Added from UI
+  studentCount     Int           @default(0)  // Added from UI
+  status           String        @default("active") // Added from UI
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   isActive         Boolean        @default(true)
+
+  // Added from UI
+  enrollmentTrends EnrollmentTrend[]
+  attendanceRates  AttendanceRate[]
 }
 
 model Course {
@@ -130,11 +222,40 @@ model Module {
   name             String
   code             String
   description      String?
+  year             Int           // Added from UI
+  credits          Int           // Added from UI
+  passingRate      Float?        // Added from UI
+  averageScore     Float?        // Added from UI
+  status           ModuleStatus  @default(ACTIVE)
+  prerequisites    ModulePrerequisite[] @relation("ModuleToPrerequisite")
+  prerequisiteFor  ModulePrerequisite[] @relation("PrerequisiteToModule")
+  
+  // Relations
   course           Course         @relation(fields: [courseId], references: [id])
   courseId         String
+  teachers         TeacherModule[]
   lessons          Lesson[]
+  
+  // Added from UI
+  learningOutcomes LearningOutcome[]
+  assessments      Assessment[]
+  topics           Topic[]
+
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+}
+
+model TeacherModule {
+  id          String   @id @default(cuid())
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  moduleId    String
+  startDate   DateTime
+  endDate     DateTime?
+  isActive    Boolean  @default(true)
+
+  @@unique([teacherId, moduleId])
 }
 
 model Cohort {

@@ -1,4 +1,4 @@
-// File: app/api/students/[id]/route.ts
+// app/api/students/[id]/route.ts
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -11,16 +11,19 @@ export async function PUT(
   try {
     const user = await getCurrentUser();
 
-    if (!user || user.role !== "ADMIN") {
+    if (!user || (user.role !== "ADMIN" && user.role !== "TEACHER")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const studentId = params.id;
     const body = await request.json();
-    const { name, email, phone, currentGrade, cohortId } = body;
+    const { name, phone, currentGrade, cohortId } = body;
 
+    // Update student and user information in a transaction
     const updatedStudent = await prisma.$transaction(async (prisma) => {
+      // First get the student to get their userId
       const student = await prisma.student.findUnique({
-        where: { id: params.id },
+        where: { id: studentId },
         select: { userId: true },
       });
 
@@ -33,17 +36,16 @@ export async function PUT(
         where: { id: student.userId },
         data: {
           name,
-          email,
           phone,
         },
       });
 
       // Update student information
-      return prisma.student.update({
-        where: { id: params.id },
+      const updatedStudent = await prisma.student.update({
+        where: { id: studentId },
         data: {
           currentGrade,
-          cohortId,
+          ...(cohortId ? { cohortId } : {}),
         },
         include: {
           user: {
@@ -53,6 +55,7 @@ export async function PUT(
               phone: true,
               avatar: true,
               isActive: true,
+              joinDate: true,
             },
           },
           cohort: {
@@ -67,11 +70,16 @@ export async function PUT(
           },
         },
       });
+
+      return updatedStudent;
     });
 
     return NextResponse.json(updatedStudent);
   } catch (error) {
     console.error("Error updating student:", error);
+    if (error instanceof Error && error.message === "Student not found") {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

@@ -1,4 +1,4 @@
-// File: app/api/students/route.ts
+// app/api/students/route.ts
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -7,12 +7,6 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || (user.role !== "ADMIN" && user.role !== "TEACHER")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const students = await prisma.student.findMany({
       include: {
         user: {
@@ -34,24 +28,33 @@ export async function GET() {
             },
           },
         },
-        attendance: {
-          select: {
-            status: true,
-            minutesLate: true,
-            lesson: {
-              select: {
-                date: true,
-              },
-            },
-          },
-          take: 5,
+        logs: {
           orderBy: {
             createdAt: "desc",
+          },
+          take: 5,
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            teacher: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
       orderBy: {
-        createdAt: "desc",
+        user: {
+          name: "asc",
+        },
       },
     });
 
@@ -65,7 +68,6 @@ export async function GET() {
   }
 }
 
-// app/api/students/route.ts (partial update)
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
               phone: true,
               avatar: true,
               isActive: true,
+              joinDate: true,
             },
           },
           cohort: {

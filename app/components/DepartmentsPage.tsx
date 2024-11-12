@@ -1,5 +1,6 @@
+// app/departments/page.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -36,8 +36,18 @@ import {
   Trash2,
   GraduationCap,
   BookOpen,
+  HomeIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "react-toastify";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface Module {
   id: string;
@@ -46,7 +56,7 @@ interface Module {
 }
 
 interface Department {
-  id: number;
+  id: string;
   name: string;
   head: string;
   staffCount: number;
@@ -56,133 +66,94 @@ interface Department {
   description?: string;
 }
 
-interface EditDepartmentFormProps {
-  department: Department;
-  onSave: (updatedDepartment: Department) => void;
-  onClose: () => void;
-}
-
-const EditDepartmentForm: React.FC<EditDepartmentFormProps> = ({
-  department,
-  onSave,
-  onClose,
-}) => {
-  const [editedDepartment, setEditedDepartment] = useState<Department>({
-    ...department,
-  });
-
-  const handleSave = () => {
-    onSave(editedDepartment);
-    onClose();
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <Label>Department Name</Label>
-        <Input
-          value={editedDepartment.name}
-          onChange={(e) =>
-            setEditedDepartment({ ...editedDepartment, name: e.target.value })
-          }
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label>Department Head</Label>
-        <Select
-          value={editedDepartment.head}
-          onValueChange={(value) =>
-            setEditedDepartment({ ...editedDepartment, head: value })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select department head " />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Dr. Sarah Johnson">Dr. Sarah Johnson</SelectItem>
-            <SelectItem value="Prof. Michael Chen">
-              Prof. Michael Chen
-            </SelectItem>
-            <SelectItem value="Dr. James Wilson">Dr. James Wilson</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Status</Label>
-        <Select
-          value={editedDepartment.status}
-          onValueChange={(value: "active" | "inactive") =>
-            setEditedDepartment({ ...editedDepartment, status: value })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} className="bg-main hover:bg-second">
-          Save Changes
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 const DepartmentsPage = () => {
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: 1,
-      name: "Software Development",
-      head: "Dr. Sarah Johnson",
-      staffCount: 12,
-      studentCount: 156,
-      modules: [
-        { id: "1", code: "SD101", name: "Introduction to Programming" },
-        { id: "2", code: "SD201", name: "Web Development" },
-        { id: "3", code: "SD301", name: "Mobile App Development" },
-      ],
-      status: "active",
-      description:
-        "Leading department for software engineering and development practices.",
-    },
-    {
-      id: 2,
-      name: "Data Science",
-      head: "Prof. Michael Chen",
-      staffCount: 8,
-      studentCount: 98,
-      modules: [
-        { id: "4", code: "DS101", name: "Data Analysis Fundamentals" },
-        { id: "5", code: "DS201", name: "Machine Learning" },
-        { id: "6", code: "DS301", name: "Big Data Analytics" },
-      ],
-      status: "active",
-      description:
-        "Focused on data analysis, machine learning, and statistical modeling.",
-    },
-  ]);
-
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleUpdateDepartment = (updatedDepartment: Department) => {
-    setDepartments(
-      departments.map((dept) =>
-        dept.id === updatedDepartment.id ? updatedDepartment : dept
-      )
-    );
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch("/api/departments");
+      const data = await response.json();
+      setDepartments(data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      toast.error("Failed to load departments");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateDepartment = async (formData: FormData) => {
+    try {
+      const response = await fetch("/api/departments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          description: formData.get("description"),
+          headOfDepartment: formData.get("head"),
+          status: "active",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create department");
+      }
+
+      toast.success("Department created successfully");
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error creating department:", error);
+      toast.error("Failed to create department");
+    }
+  };
+
+  const handleUpdateDepartment = async (updatedDepartment: Department) => {
+    try {
+      const response = await fetch(`/api/departments/${updatedDepartment.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDepartment),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update department");
+      }
+
+      toast.success("Department updated successfully");
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error updating department:", error);
+      toast.error("Failed to update department");
+    }
+  };
+
+  const handleDeleteDepartment = async (departmentId: string) => {
+    try {
+      const response = await fetch(`/api/departments/${departmentId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete department");
+      }
+
+      toast.success("Department deleted successfully");
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      toast.error("Failed to delete department");
+    }
   };
 
   const filteredDepartments = departments.filter((dept) => {
@@ -194,9 +165,34 @@ const DepartmentsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-main"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/" className="flex items-center gap-2">
+                  <HomeIcon className="h-4 w-4" />
+                  Home
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Departments</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold">MANAGE DEPARTMENTS</h1>
@@ -211,8 +207,33 @@ const DepartmentsPage = () => {
                 Add Department
               </Button>
             </SheetTrigger>
-            <SheetContent className="overflow-y-auto w-full max-w-xl">
-              {/* Add department form - similar structure to EditDepartmentForm */}
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Add New Department</SheetTitle>
+              </SheetHeader>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleCreateDepartment(new FormData(e.currentTarget));
+                }}
+                className="space-y-4 mt-4"
+              >
+                <div className="space-y-2">
+                  <Label>Department Name</Label>
+                  <Input name="name" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input name="description" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Department Head</Label>
+                  <Input name="head" required />
+                </div>
+                <Button type="submit" className="w-full">
+                  Create Department
+                </Button>
+              </form>
             </SheetContent>
           </Sheet>
         </div>
@@ -245,7 +266,6 @@ const DepartmentsPage = () => {
                     <Link
                       href={`/departments/${department.id}`}
                       className="group flex items-center gap-2 hover:text-main transition-colors"
-                      prefetch
                     >
                       <h3 className="text-lg font-semibold group-hover:text-main">
                         {department.name}
@@ -276,11 +296,7 @@ const DepartmentsPage = () => {
                         <SheetHeader>
                           <SheetTitle>Edit Department</SheetTitle>
                         </SheetHeader>
-                        <EditDepartmentForm
-                          department={department}
-                          onSave={handleUpdateDepartment}
-                          onClose={() => {}} // Add sheet close functionality
-                        />
+                        {/* Add edit form similar to create form */}
                       </SheetContent>
                     </Sheet>
 
@@ -304,7 +320,14 @@ const DepartmentsPage = () => {
                         </DialogHeader>
                         <DialogFooter>
                           <Button variant="ghost">Cancel</Button>
-                          <Button variant="destructive">Delete</Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              handleDeleteDepartment(department.id)
+                            }
+                          >
+                            Delete
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -326,19 +349,21 @@ const DepartmentsPage = () => {
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm font-medium">Modules</span>
+                {department.modules.length > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-medium">Modules</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {department.modules.map((module) => (
+                        <Badge key={module.id} variant="secondary">
+                          {module.code} - {module.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {department.modules.map((module) => (
-                      <Badge key={module.id} variant="secondary">
-                        {module.code} - {module.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+                )}
               </Card>
             ))}
           </div>

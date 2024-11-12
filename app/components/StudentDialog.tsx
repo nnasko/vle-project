@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { GradeLevel } from "@prisma/client";
 
 interface Cohort {
@@ -41,14 +41,17 @@ interface StudentDialogProps {
     currentGrade: GradeLevel;
     cohortId?: string;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
+  trigger?: React.ReactNode; // Optional custom trigger
 }
 
 const StudentDialog: React.FC<StudentDialogProps> = ({
   mode,
   student,
   onSubmit,
+  trigger,
 }) => {
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: student?.user.name || "",
     email: student?.user.email || "",
@@ -60,6 +63,21 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open && student && mode === "edit") {
+      setFormData({
+        name: student.user.name,
+        email: student.user.email,
+        phone: student.user.phone || "",
+        currentGrade: student.currentGrade,
+        cohortId: student.cohortId,
+        password: "",
+      });
+    }
+  }, [open, student, mode]);
 
   // Fetch available cohorts
   useEffect(() => {
@@ -78,24 +96,51 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
       }
     };
 
-    fetchCohorts();
-  }, []);
+    if (open) {
+      fetchCohorts();
+    }
+  }, [open]);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      onSubmit(formData);
-    },
-    [formData, onSubmit]
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setSubmitting(true);
+
+      let submitData;
+      if (mode === "edit" && student) {
+        // For edit mode, only include fields that can be updated
+        submitData = {
+          id: student.id,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          currentGrade: formData.currentGrade,
+          cohortId: formData.cohortId,
+        };
+      } else {
+        // For create mode, include all fields
+        submitData = formData;
+      }
+
+      await onSubmit(submitData);
+      setOpen(false); // Close dialog on successful submit
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-main hover:bg-second text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          {mode === "create" ? "Add Student" : "Edit Student"}
-        </Button>
+        {trigger || (
+          <Button className="bg-main hover:bg-second text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            {mode === "create" ? "Add Student" : "Edit Student"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl bg-white">
         <DialogHeader>
@@ -130,6 +175,7 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
                 setFormData((prev) => ({ ...prev, email: e.target.value }))
               }
               required
+              disabled={mode === "edit"} // Email cannot be changed in edit mode
             />
           </div>
 
@@ -207,11 +253,26 @@ const StudentDialog: React.FC<StudentDialogProps> = ({
 
           <DialogFooter>
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               className="bg-main hover:bg-second text-white"
-              disabled={loading}
+              disabled={submitting || loading}
             >
-              {mode === "create" ? "Add Student" : "Save Changes"}
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {mode === "create" ? "Adding..." : "Saving..."}
+                </>
+              ) : (
+                <>{mode === "create" ? "Add Student" : "Save Changes"}</>
+              )}
             </Button>
           </DialogFooter>
         </form>

@@ -209,13 +209,17 @@ export default function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
-                        minLength={8}
+                        minLength={
+                          process.env.NODE_ENV === "development" ? 1 : 8
+                        }
                         className="bg-neutral-800 border-neutral-600 pl-10 text-white"
                       />
                     </div>
                     {step === "set-password" && (
                       <p className="text-sm text-neutral-400">
-                        Password must be at least 8 characters long
+                        Password must be at least{" "}
+                        {process.env.NODE_ENV === "development" ? 1 : 8}{" "}
+                        characters long
                       </p>
                     )}
                   </div>

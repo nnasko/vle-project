@@ -1,27 +1,28 @@
+// app/api/notifications/unread-count/route.ts
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const token = await getCurrentUser();
+    const user = await getCurrentUser();
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const count = await prisma.notification.count({
       where: {
-        userId: token.id as string,
+        userId: user.id,
         read: false,
       },
     });
 
     return NextResponse.json({ count });
   } catch (error) {
-    console.error("Error fetching notification count:", error);
+    console.error("Error fetching unread notifications count:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

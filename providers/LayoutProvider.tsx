@@ -17,9 +17,9 @@ export default function LayoutProvider({
   }
 
   return (
-    <div className="flex min-h-screen bg-white pl-64">
+    <div className="flex min-h-screen bg-white">
       <Navbar />
-      <div className="flex-1 flex flex-col">{children}</div>
+      <div className="flex-1 flex flex-col pl-64">{children}</div>
     </div>
   );
 }
