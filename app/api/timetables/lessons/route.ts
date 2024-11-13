@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // Find teacher record
     const teacher = await prisma.teacher.findFirst({
       where: {
-        userId: teacherId,
+        id: teacherId,
       },
     });
 

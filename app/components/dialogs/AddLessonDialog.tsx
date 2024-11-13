@@ -30,8 +30,8 @@ interface AddLessonDialogProps {
   onAddLesson: (lesson: NewLessonRequest) => Promise<void>;
   teachers: Teacher[];
   defaultTeacherId?: string;
+  studentCohortId?: string;
   isLoading?: boolean;
-  studentCohortId: string; // rename to be more specific
 }
 
 const AddLessonDialog: React.FC<AddLessonDialogProps> = ({
@@ -43,8 +43,8 @@ const AddLessonDialog: React.FC<AddLessonDialogProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [openTeacherSelect, setOpenTeacherSelect] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Add this
-  const [error, setError] = useState<string | null>(null); // Add this
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [newLesson, setNewLesson] = useState<NewLessonRequest>(() => ({
     moduleId: "",
     cohortId: studentCohortId, // Initialize with the student's cohort ID

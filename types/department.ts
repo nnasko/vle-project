@@ -37,6 +37,7 @@ export interface User {
   phone?: string;
   joinDate: Date;
   createdAt: Date;
+  cohort: Cohort;
   updatedAt: Date;
   isActive: boolean;
 }
@@ -191,7 +192,8 @@ export interface TimetableUser {
   role: UserRole;
   avatar?: string;
   departmentId?: string;
-  courseId?: string;
+  cohortId?: string;
+  user: User;
   cohort: Cohort;
   attendance: AttendanceStats;
 }

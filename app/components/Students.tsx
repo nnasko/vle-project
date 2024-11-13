@@ -13,12 +13,15 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
 import StudentDialog from "./StudentDialog";
-import { GradeLevel, AttendanceStatus } from "@prisma/client";
+import { GradeLevel } from "@prisma/client";
 import { StudentLogDialog } from "./StudentLogDialong";
 
 // Updated interfaces to match Prisma schema
 interface Student {
   id: string;
+  department: {
+    name: string;
+  };
   user: {
     name: string;
     email: string;
@@ -31,7 +34,7 @@ interface Student {
   expectedGraduation: Date;
   cohort?: {
     name: string;
-    course: {
+    department: {
       name: string;
     };
   };
@@ -61,7 +64,7 @@ interface CreateStudentInput {
 
 const COURSE_OPTIONS = [
   { label: "All Courses", value: "all" },
-  { label: "Software Development", value: "Software Development" },
+  { label: "E-Sports", value: "E-sports" },
   { label: "Web Design", value: "Web Design" },
   { label: "Data Science", value: "Data Science" },
 ] as const;
@@ -159,6 +162,9 @@ const StudentCard: React.FC<{
 // StudentRow component
 interface Student {
   id: string;
+  department: {
+    name: string;
+  };
   user: {
     name: string;
     email: string;
@@ -171,7 +177,7 @@ interface Student {
   expectedGraduation: Date;
   cohort?: {
     name: string;
-    course: {
+    department: {
       name: string;
     };
   };
@@ -302,7 +308,8 @@ const StudentRow: React.FC<{
 const Students: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [departments, setDepartments] = useState<string[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -318,6 +325,16 @@ const Students: React.FC = () => {
       }
       const data = await response.json();
       setStudents(data);
+
+      // Extract unique department names from students data
+      const uniqueDepartments = Array.from(
+        new Set(
+          data
+            .map((student: Student) => student.cohort?.department.name)
+            .filter(Boolean)
+        )
+      );
+      setDepartments(uniqueDepartments);
     } catch (error) {
       console.error("Error fetching students:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -349,7 +366,6 @@ const Students: React.FC = () => {
       await fetchStudents(); // Refresh the list
     } catch (error) {
       console.error("Error creating student:", error);
-      // Handle error (could add error state and display to user)
     }
   };
 
@@ -371,7 +387,6 @@ const Students: React.FC = () => {
       await fetchStudents(); // Refresh the list
     } catch (error) {
       console.error("Error updating student:", error);
-      // Handle error (could add error state and display to user)
     }
   };
 
@@ -379,9 +394,10 @@ const Students: React.FC = () => {
     const matchesSearch = student.user.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesCourse =
-      selectedCourse === "all" || student.cohort?.name === selectedCourse;
-    return matchesSearch && matchesCourse;
+    const matchesDepartment =
+      selectedDepartment === "all" ||
+      student.cohort?.department.name === selectedDepartment;
+    return matchesSearch && matchesDepartment;
   });
 
   if (error) {
@@ -417,14 +433,18 @@ const Students: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+            <Select
+              value={selectedDepartment}
+              onValueChange={setSelectedDepartment}
+            >
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Select Cohort" />
+                <SelectValue placeholder="Select Department" />
               </SelectTrigger>
               <SelectContent>
-                {COURSE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((department) => (
+                  <SelectItem key={department} value={department}>
+                    {department}
                   </SelectItem>
                 ))}
               </SelectContent>

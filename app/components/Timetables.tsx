@@ -122,8 +122,8 @@ const Timetables = () => {
       if (!response.ok) {
         throw new Error("Failed to fetch timetable");
       }
-
       const data = await response.json();
+      console.log(data);
       setEvents(data.events || []);
     } catch (error) {
       console.error("Failed to fetch user timetable:", error);
@@ -169,19 +169,20 @@ const Timetables = () => {
         throw new Error("No user selected");
       }
 
-      if (!selectedUser.cohort?.id) {
+      const cohortId = getStudentCohortId(selectedUser);
+      if (!cohortId) {
         throw new Error("Student is not assigned to a cohort");
       }
 
       // Create the request data with proper IDs
       const requestData = {
         ...lessonData,
-        cohortId: selectedUser.cohort.id,
+        cohortId,
         studentId:
-          selectedUser.role === "STUDENT" ? selectedUser.id : undefined,
+          selectedUser.role === UserRole.STUDENT ? selectedUser.id : undefined,
       };
 
-      console.log("Sending lesson data:", requestData); // Debug log
+      console.log("Sending lesson data:", requestData);
 
       const response = await fetch("/api/timetables/lessons", {
         method: "POST",
@@ -218,6 +219,23 @@ const Timetables = () => {
   });
 
   const selectedUser = users.find((user) => user.id === selectedUserId);
+
+  // Add a helper function to safely get the teacher ID
+  const getDefaultTeacherId = (
+    user: TimetableUser | undefined
+  ): string | undefined => {
+    return user?.cohort?.teacher?.user?.id;
+  };
+
+  // Add a helper function to safely get the cohort ID
+  const getStudentCohortId = (
+    user: TimetableUser | undefined
+  ): string | undefined => {
+    console.log("User data:", user); // Debug log
+    const cohortId = user?.cohortId;
+    console.log("Found cohort ID:", cohortId); // Debug log
+    return cohortId;
+  };
 
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
@@ -287,8 +305,9 @@ const Timetables = () => {
               <AddLessonDialog
                 onAddLesson={handleAddLesson}
                 teachers={teachers}
-                defaultTeacherId={selectedUser.cohort.teacher.user.id} // Use teacher profile ID instead of user ID
-                studentCohortId={selectedUser.cohort.id}
+                defaultTeacherId={getDefaultTeacherId(selectedUser)}
+                studentCohortId={getStudentCohortId(selectedUser)}
+                isLoading={isLoadingTimetable}
               />
             )}
             <Button variant="outline" size="sm" onClick={toggleSearch}>

@@ -30,7 +30,7 @@ export default function Timetable() {
   const fetchTimetable = async (weekStart?: Date) => {
     try {
       setLoading(true);
-      let url = "/api/timetables/users/me";
+      let url = "/api/timetables/";
 
       if (weekStart) {
         url = `/api/timetables/users/me/lessons?weekStart=${weekStart.toISOString()}`;
