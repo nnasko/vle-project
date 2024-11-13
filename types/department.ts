@@ -145,6 +145,57 @@ export interface TeacherModule {
   isActive: boolean;
 }
 
+export interface TimetableEvent {
+  id: string;
+  title: string;
+  instructor: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  color: string;
+  moduleId: string;
+  cohortId?: string;
+  studentId?: string;
+  attendance?: {
+    status: AttendanceStatus;
+    minutes?: number;
+  };
+}
+
+export interface AttendanceStats {
+  total: number;
+  present: number;
+  late: number;
+  authorizedAbsence: number;
+  unauthorizedAbsence: number;
+  averageLateness: number;
+}
+
+export interface NewLessonRequest {
+  moduleId?: string;
+  cohortId?: string;
+  topic: string;
+  description?: string;
+  teacherId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  materials?: string[];
+}
+
+export interface TimetableUser {
+  id: string;
+  name: string;
+  role: UserRole;
+  avatar?: string;
+  departmentId?: string;
+  courseId?: string;
+  cohort: Cohort;
+  attendance: AttendanceStats;
+}
+
 export interface Teacher {
   id: string;
   userId: string;
@@ -163,6 +214,9 @@ export interface Teacher {
   departmentId: string;
   teachingModules: TeacherModule[];
   cohorts: Cohort[];
+  department: {
+    name: string;
+  };
   isActive: boolean;
 }
 
@@ -182,6 +236,7 @@ export interface Cohort {
   teacher: {
     user: {
       name: string;
+      id: string;
     };
   };
   startDate: string;
@@ -189,7 +244,7 @@ export interface Cohort {
   maxStudents: number;
   currentStudents: number;
   isActive: boolean;
-  students: any[]; // Define Student interface if needed
+  students: Student[];
 }
 
 export interface Student {

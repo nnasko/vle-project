@@ -35,6 +35,7 @@ export async function middleware(request: NextRequest) {
           "/students",
           "/departments",
           "/timetables",
+          "/timetable",
           "/messages",
           "/notifications",
           "/profile",

@@ -269,8 +269,8 @@ model Lesson {
   id               String         @id @default(cuid())
   topic            String
   description      String?
-  module           Module         @relation(fields: [moduleId], references: [id])
-  moduleId         String
+  module           Module?         @relation(fields: [moduleId], references: [id])
+  moduleId         String?
   cohort           Cohort         @relation(fields: [cohortId], references: [id])
   cohortId         String
   teacher          Teacher        @relation(fields: [teacherId], references: [id])

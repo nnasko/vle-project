@@ -1,72 +1,72 @@
+// components/TimeTableGrid.tsx
 "use client";
+
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { UserCheck, Clock, Users, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-interface Event {
-  id: number;
-  title: string;
-  instructor: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  room: string;
-  color: string;
-  attendance?: {
-    status: "present" | "late" | "absent" | "authorized";
-    minutes?: number;
-  };
-}
-
-interface AttendanceStats {
-  total: number;
-  present: number;
-  late: number;
-  authorizedAbsence: number;
-  unauthorizedAbsence: number;
-  averageLateness: number;
-}
+  UserCheck,
+  Clock,
+  Users,
+  AlertCircle,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from "date-fns";
+import {
+  AttendanceStats,
+  TimetableEvent,
+  AttendanceStatus,
+} from "@/types/department";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 
 interface TimeTableGridProps {
-  userId?: number;
+  userId?: string;
   userName?: string;
-  events: Event[];
+  events: TimetableEvent[];
   isTeacher?: boolean;
+  attendanceStats: AttendanceStats;
+  onWeekChange: (date: Date) => void;
 }
 
-type AttendanceStatus = "present" | "late" | "absent" | "authorized";
-
-const TimeTableGrid: React.FC<TimeTableGridProps> = ({
-  userId,
+export const TimeTableGrid: React.FC<TimeTableGridProps> = ({
   userName,
   events = [],
-  isTeacher = false,
+  attendanceStats,
+  onWeekChange,
 }) => {
-  const [attendanceStats] = useState<AttendanceStats>({
-    total: 50,
-    present: 45,
-    late: 3,
-    authorizedAbsence: 1,
-    unauthorizedAbsence: 1,
-    averageLateness: 8,
-  });
-
   const days = ["MON", "TUE", "WED", "THU", "FRI"];
-
   const timeSlots = Array.from({ length: 9 }, (_, i) => {
     const hour = i + 9;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
+
+  const handleWeekChange = (date: Date) => {
+    setSelectedDate(date);
+    onWeekChange(date);
+    setCalendarOpen(false);
+  };
+
+  const handlePreviousWeek = () => {
+    const newDate = subWeeks(selectedDate, 1);
+    handleWeekChange(newDate);
+  };
+
+  const handleNextWeek = () => {
+    const newDate = addWeeks(selectedDate, 1);
+    handleWeekChange(newDate);
+  };
 
   const calculateEventPosition = (
     startTime: string,
@@ -84,7 +84,6 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
     const top = ((startHour - 9) / 8) * 100;
     const height = ((endHour - startHour) / 8) * 100;
     const left = days.indexOf(day) * 20;
-    // Reduced width and added margin for better spacing
     const width = 19;
 
     return {
@@ -98,13 +97,13 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
 
   const getAttendanceColor = (status: AttendanceStatus | undefined) => {
     switch (status) {
-      case "present":
+      case "PRESENT":
         return "bg-emerald-500";
-      case "late":
+      case "LATE":
         return "bg-yellow-500";
-      case "absent":
+      case "ABSENT":
         return "bg-red-500";
-      case "authorized":
+      case "AUTHORIZED":
         return "bg-blue-500";
       default:
         return "bg-gray-500";
@@ -113,12 +112,12 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
 
   return (
     <div>
-      <span className="text-2xl font-bold p-6">TIMETABLE</span>
-      <div className="space-y-6 p-6 overflow-auto">
+      <div className="overflow-auto">
+        <span className="text-2xl font-bold pb-4">TIMETABLE</span>
         <div className="bg-neutral-700 rounded-md p-4">
           {/* Attendance Overview */}
           <Card className="bg-neutral-700 border-2 border-second">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-2">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <UserCheck className="w-4 h-4 text-emerald-500" />
@@ -200,23 +199,55 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
               <h2 className="text-lg font-semibold text-white">
                 {userName ? `${userName}'s Timetable` : "Your Timetable"}
               </h2>
-              <Select>
-                <SelectTrigger className="w-[150px] bg-neutral-700 border-neutral-600 text-white">
-                  <SelectValue placeholder="Select Week" />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-700 border-neutral-700 text-white">
-                  <SelectItem value="current">Current Week</SelectItem>
-                  <SelectItem value="next">Next Week</SelectItem>
-                  <SelectItem value="previous">Previous Week</SelectItem>
-                  <SelectItem value="custom">Custom Week</SelectItem>
-                </SelectContent>
-              </Select>
-              <Badge
-                variant="outline"
-                className="h-9 px-4 rounded-md flex items-center bg-neutral-700 border-neutral-600 text-neutral-200"
-              >
-                Week 23 - June 3-7, 2024
-              </Badge>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePreviousWeek}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <span>
+                        Week {format(weekStart, "d MMM")} -{" "}
+                        {format(weekEnd, "d MMM, yyyy")}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && handleWeekChange(date)}
+                      disabled={(date) =>
+                        date > addWeeks(new Date(), 4) ||
+                        date < subWeeks(new Date(), 52)
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleNextWeek}
+                  className="h-8 w-8"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -296,10 +327,9 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
                           height: position.height,
                           left: position.left,
                           width: position.width,
-                          margin: "4px", // Increased margin for better spacing
+                          margin: "4px",
                         }}
                       >
-                        {/* Attendance indicator */}
                         {event.attendance && (
                           <div
                             className={`h-1 ${getAttendanceColor(
@@ -320,7 +350,7 @@ const TimeTableGrid: React.FC<TimeTableGridProps> = ({
                         >
                           <div>{event.room}</div>
                           <div>{`${event.startTime} - ${event.endTime}`}</div>
-                          {event.attendance?.status === "late" && (
+                          {event.attendance?.status === "LATE" && (
                             <div className="text-yellow-300">
                               {event.attendance.minutes}m late
                             </div>
