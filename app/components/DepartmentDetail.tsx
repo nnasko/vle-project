@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, GraduationCap, BookOpen, School } from "lucide-react";
+import { Users, GraduationCap, BookOpen, School, Home } from "lucide-react";
 import { getDepartment } from "@/services/departmentApi";
 import { Department } from "@/types/department";
 import StatCard from "./StatCard";
@@ -12,6 +12,15 @@ import StaffTab from "./StaffTab";
 import ModulesTab from "./ModulesTab";
 import OverviewTab from "./OverviewTab";
 import CohortsTab from "./CohortsTab";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import Link from "next/link";
 
 const DepartmentDetail: React.FC = () => {
   const params = useParams();
@@ -63,90 +72,114 @@ const DepartmentDetail: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {department.name}
-          </h2>
-          <p className="text-gray-500">Course Code: {department.code}</p>
-          <p className="text-gray-500">{department.description}</p>
-          <p className="text-gray-500">
-            Duration: {department.duration.replace("_", " ").toLowerCase()}
-          </p>
+    <div>
+      <Breadcrumb className="p-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild className="flex items-center gap-2">
+              <Link href="/">
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/departments">Departments</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{department.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="space-y-6 p-6 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {department.name}
+            </h2>
+            <p className="text-gray-500">Course Code: {department.code}</p>
+            <p className="text-gray-500">{department.description}</p>
+            <p className="text-gray-500">
+              Duration: {department.duration.replace("_", " ").toLowerCase()}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={Users}
-          label="Total Staff"
-          value={department.staffCount}
-          description={
-            department.teachers?.length > 0
-              ? `${department.teachers.length} active teachers`
-              : undefined
-          }
-        />
-        <StatCard
-          icon={GraduationCap}
-          label="Total Students"
-          value={department.studentCount}
-          description="Currently enrolled"
-        />
-        <StatCard
-          icon={BookOpen}
-          label="Active Modules"
-          value={department.modules?.length || 0}
-          description={
-            department.modules?.filter((m) => m.status === "ACTIVE").length +
-            " running"
-          }
-        />
-        <StatCard
-          icon={School}
-          label="Active Cohorts"
-          value={department.cohorts?.length || 0}
-          description={
-            department.cohorts?.filter((c) => c.isActive).length + " running"
-          }
-        />
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-gray-100">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="staff">Staff</TabsTrigger>
-          <TabsTrigger value="modules">Modules</TabsTrigger>
-          <TabsTrigger value="cohorts">Cohorts</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <OverviewTab department={department} />
-        </TabsContent>
-
-        <TabsContent value="staff">
-          <StaffTab
-            department={department}
-            staffSearch={staffSearch}
-            setStaffSearch={setStaffSearch}
-            roleFilter={roleFilter}
-            setRoleFilter={setRoleFilter}
-            onTeacherAdded={handleTeacherAdded}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard
+            icon={Users}
+            label="Total Staff"
+            value={department.staffCount}
+            description={
+              department.teachers?.length > 0
+                ? `${department.teachers.length} active teachers`
+                : undefined
+            }
           />
-        </TabsContent>
+          <StatCard
+            icon={GraduationCap}
+            label="Total Students"
+            value={department.studentCount}
+            description="Currently enrolled"
+          />
+          <StatCard
+            icon={BookOpen}
+            label="Active Modules"
+            value={department.modules?.length || 0}
+            description={
+              department.modules?.filter((m) => m.status === "ACTIVE").length +
+              " running"
+            }
+          />
+          <StatCard
+            icon={School}
+            label="Active Cohorts"
+            value={department.cohorts?.length || 0}
+            description={
+              department.cohorts?.filter((c) => c.isActive).length + " running"
+            }
+          />
+        </div>
 
-        <TabsContent value="modules">
-          <ModulesTab department={department} />
-        </TabsContent>
+        {/* Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-gray-100">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+            <TabsTrigger value="modules">Modules</TabsTrigger>
+            <TabsTrigger value="cohorts">Cohorts</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="cohorts">
-          <CohortsTab department={department} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="overview">
+            <OverviewTab department={department} />
+          </TabsContent>
+
+          <TabsContent value="staff">
+            <StaffTab
+              department={department}
+              staffSearch={staffSearch}
+              setStaffSearch={setStaffSearch}
+              roleFilter={roleFilter}
+              setRoleFilter={setRoleFilter}
+              onTeacherAdded={handleTeacherAdded}
+            />
+          </TabsContent>
+
+          <TabsContent value="modules">
+            <ModulesTab department={department} />
+          </TabsContent>
+
+          <TabsContent value="cohorts">
+            <CohortsTab department={department} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

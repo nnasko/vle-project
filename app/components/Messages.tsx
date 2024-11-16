@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,203 +35,301 @@ import {
   Search,
   Plus,
   Send,
-  Clock,
-  Home as HomeIcon,
+  Home,
   MoreVertical,
   Trash2,
-  Home,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
-
-interface User {
-  id: number;
-  name: string;
-  avatar: string;
-  lastActive: string;
-  unreadCount?: number;
-  status: "online" | "offline" | "away";
-}
-
-interface Message {
-  id: number;
-  senderId: number;
-  receiverId: number;
-  content: string;
-  timestamp: string;
-  read: boolean;
-}
-
-interface Thread {
-  userId: number;
-  messages: Message[];
-}
-
-const mockUsers: User[] = [
-  {
-    id: 1,
-    name: "Atanas Kyurchiev",
-    avatar: "/api/placeholder/32/32",
-    lastActive: "2 minutes ago",
-    unreadCount: 3,
-    status: "online",
-  },
-  {
-    id: 2,
-    name: "Joseph Mitsi",
-    avatar: "/api/placeholder/32/32",
-    lastActive: "5 minutes ago",
-    status: "online",
-  },
-  {
-    id: 3,
-    name: "Oliver Witmond-Harris",
-    avatar: "/api/placeholder/32/32",
-    lastActive: "25 minutes ago",
-    unreadCount: 1,
-    status: "away",
-  },
-  {
-    id: 4,
-    name: "Jack Ames",
-    avatar: "/api/placeholder/32/32",
-    lastActive: "1 hour ago",
-    status: "offline",
-  },
-  {
-    id: 5,
-    name: "Luke Wilson",
-    avatar: "/api/placeholder/32/32",
-    lastActive: "3 hours ago",
-    status: "offline",
-  },
-];
-
-const mockThreads: Record<number, Message[]> = {
-  1: [
-    {
-      id: 1,
-      senderId: 1,
-      receiverId: 0,
-      content: "Hey, how's your progress with the React assignment?",
-      timestamp: "2024-03-20T10:30:00",
-      read: true,
-    },
-    {
-      id: 2,
-      senderId: 0,
-      receiverId: 1,
-      content: "Going well! Just working on the final touches.",
-      timestamp: "2024-03-20T10:32:00",
-      read: true,
-    },
-    {
-      id: 3,
-      senderId: 1,
-      receiverId: 0,
-      content: "Great! Let me know if you need any help.",
-      timestamp: "2024-03-20T10:33:00",
-      read: false,
-    },
-  ],
-  3: [
-    {
-      id: 4,
-      senderId: 3,
-      receiverId: 0,
-      content: "Could you help me with the database assignment?",
-      timestamp: "2024-03-20T09:15:00",
-      read: false,
-    },
-  ],
-};
-
-const formatTimestamp = (timestamp: string) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) {
-    return `${days}d ago`;
-  } else if (hours > 0) {
-    return `${hours}h ago`;
-  } else if (minutes > 0) {
-    return `${minutes}m ago`;
-  } else {
-    return "Just now";
-  }
-};
+import { messageService, Thread } from "@/services/messageService";
+import { toast } from "react-toastify";
 
 const Messages = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
-  const [activeUsers, setActiveUsers] = useState<User[]>([]);
-  const [availableUsers, setAvailableUsers] = useState(mockUsers);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [threads, setThreads] = useState(mockThreads);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredUsers = availableUsers.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const currentThread = selectedUser ? threads[selectedUser.id] || [] : [];
-
-  const handleSendMessage = () => {
-    if (!selectedUser || !newMessage.trim()) return;
-
-    const newThreadMessage: Message = {
-      id:
-        Math.max(
-          ...Object.values(threads)
-            .flat()
-            .map((m) => m.id),
-          0
-        ) + 1,
-      senderId: 0,
-      receiverId: selectedUser.id,
-      content: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
-
-    setThreads((prev) => ({
-      ...prev,
-      [selectedUser.id]: [...(prev[selectedUser.id] || []), newThreadMessage],
-    }));
-
-    setNewMessage("");
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleStartChat = (userId: string) => {
-    const user = mockUsers.find((u) => u.id === parseInt(userId));
-    if (!user) return;
-
-    setActiveUsers((prev) => {
-      // Check if user is already active
-      if (prev.some((u) => u.id === user.id)) return prev;
-      return [...prev, user];
-    });
-    setSelectedUser(user);
-  };
-
-  const handleDeleteChat = (userId: number) => {
-    // Remove from threads
-    setThreads((prev) => {
-      const newThreads = { ...prev };
-      delete newThreads[userId];
-      return newThreads;
-    });
-
-    // Remove from active users
-    setActiveUsers((prev) => prev.filter((user) => user.id !== userId));
-
-    // Clear selected user if it was the deleted one
-    if (selectedUser?.id === userId) {
-      setSelectedUser(null);
+  const fetchAvailableUsers = async () => {
+    try {
+      const response = await fetch("/api/users/available");
+      if (!response.ok) throw new Error("Failed to fetch users");
+      const users = await response.json();
+      setAvailableUsers(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load available users");
     }
   };
+
+  useEffect(() => {
+    fetchThreads();
+  }, []);
+
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (selectedThread) {
+      // Poll for new messages every 5 seconds for the active conversation
+      pollInterval = setInterval(async () => {
+        try {
+          const updatedThreads = await messageService.getThreads();
+          const updatedThread = updatedThreads.find(
+            (t) => t.participant.id === selectedThread.participant.id
+          );
+
+          if (updatedThread) {
+            // Update the selected thread with new messages
+            setSelectedThread(updatedThread);
+
+            // Update the threads list
+            setThreads((prevThreads) =>
+              prevThreads.map((thread) =>
+                thread.participant.id === updatedThread.participant.id
+                  ? updatedThread
+                  : thread
+              )
+            );
+
+            // If we're at the bottom, scroll to show new messages
+            const container = messagesEndRef.current?.parentElement;
+            if (container) {
+              const isAtBottom =
+                container.scrollHeight - container.scrollTop ===
+                container.clientHeight;
+              if (isAtBottom) {
+                scrollToBottom();
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error polling for messages:", error);
+        }
+      }, 5000); // Poll every 5 seconds
+    }
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [selectedThread?.participant.id]);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      fetchAvailableUsers();
+    }
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    if (selectedThread) {
+      scrollToBottom();
+    }
+  }, [selectedThread?.messages]);
+
+  const fetchThreads = async () => {
+    try {
+      const fetchedThreads = await messageService.getThreads();
+
+      // Sort threads by last message timestamp
+      const sortedThreads = fetchedThreads.sort((a, b) => {
+        const aTime = a.lastMessage
+          ? new Date(a.lastMessage.createdAt).getTime()
+          : 0;
+        const bTime = b.lastMessage
+          ? new Date(b.lastMessage.createdAt).getTime()
+          : 0;
+        return bTime - aTime;
+      });
+
+      // Sort messages within each thread
+      sortedThreads.forEach((thread) => {
+        thread.messages.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+
+      setThreads(sortedThreads);
+    } catch (error) {
+      toast.error("Failed to load messages");
+      console.error("Error fetching threads:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartChat = async (participantId: string) => {
+    const thread = threads.find((t) => t.participant.id === participantId);
+    if (thread) {
+      setSelectedThread(thread);
+    } else {
+      // Create new thread
+      const newThread: Thread = {
+        participant: {
+          id: participantId,
+          name: "New Chat",
+          email: "",
+          avatar: null,
+          isActive: true,
+          status: "offline",
+        },
+        messages: [],
+      };
+      setThreads((prev) => [...prev, newThread]);
+      setSelectedThread(newThread);
+    }
+  };
+
+  const handleThreadSelection = async (thread: Thread) => {
+    setSelectedThread(thread);
+
+    try {
+      // Mark all unread messages as read
+      const unreadMessages = thread.messages.filter(
+        (msg) => !msg.read && msg.senderId === thread.participant.id
+      );
+
+      if (unreadMessages.length > 0) {
+        await messageService.markThreadAsRead(unreadMessages);
+
+        // Update local state to reflect read status
+        setThreads((prevThreads) =>
+          prevThreads.map((t) => {
+            if (t.participant.id === thread.participant.id) {
+              return {
+                ...t,
+                messages: t.messages.map((msg) => ({
+                  ...msg,
+                  read:
+                    msg.senderId === thread.participant.id ? true : msg.read,
+                })),
+                participant: {
+                  ...t.participant,
+                  unreadCount: 0,
+                },
+              };
+            }
+            return t;
+          })
+        );
+
+        // Update selected thread
+        setSelectedThread((prevThread) => {
+          if (!prevThread) return null;
+          return {
+            ...prevThread,
+            messages: prevThread.messages.map((msg) => ({
+              ...msg,
+              read: msg.senderId === thread.participant.id ? true : msg.read,
+            })),
+            participant: {
+              ...prevThread.participant,
+              unreadCount: 0,
+            },
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedThread || !newMessage.trim()) return;
+
+    setSending(true);
+    try {
+      const message = await messageService.sendMessage(
+        selectedThread.participant.id,
+        "New Message",
+        newMessage.trim()
+      );
+
+      // Update threads state
+      setThreads((prev) => {
+        const updatedThreads = prev.map((thread) => {
+          if (thread.participant.id === selectedThread.participant.id) {
+            return {
+              ...thread,
+              messages: [...thread.messages, message],
+              lastMessage: message,
+            };
+          }
+          return thread;
+        });
+
+        // Sort threads by last message timestamp
+        return updatedThreads.sort((a, b) => {
+          const aTime = a.lastMessage
+            ? new Date(a.lastMessage.createdAt).getTime()
+            : 0;
+          const bTime = b.lastMessage
+            ? new Date(b.lastMessage.createdAt).getTime()
+            : 0;
+          return bTime - aTime;
+        });
+      });
+
+      // Update selected thread
+      setSelectedThread((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [...prev.messages, message],
+          lastMessage: message,
+        };
+      });
+
+      setNewMessage("");
+      scrollToBottom();
+    } catch (error) {
+      toast.error("Failed to send message");
+      console.error("Error sending message:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleDeleteThread = async (threadId: string) => {
+    try {
+      await messageService.deleteThread(threadId);
+      setThreads((prev) => prev.filter((t) => t.participant.id !== threadId));
+      if (selectedThread?.participant.id === threadId) {
+        setSelectedThread(null);
+      }
+    } catch (error) {
+      console.error("Error deleting thread:", error);
+      toast.error("Failed to delete chat");
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return "Just now";
+  };
+
+  const filteredThreads = threads.filter((thread) =>
+    thread.participant.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen">
@@ -240,38 +338,37 @@ const Messages = () => {
           <BreadcrumbItem>
             <BreadcrumbLink asChild className="flex items-center gap-2">
               <Link href="/">
-                <Home className="w-4 h-4" />
+                <Home className="h-4 w-4" />
                 Home
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>
-              <BreadcrumbLink asChild>
-                <Link href="/messages">Messages</Link>
-              </BreadcrumbLink>
-            </BreadcrumbPage>
+            <BreadcrumbPage>Messages</BreadcrumbPage>
           </BreadcrumbItem>
-          {selectedUser && (
+          {selectedThread && (
             <>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{selectedUser.name}</BreadcrumbPage>
+                <BreadcrumbPage>
+                  {selectedThread.participant.name}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </>
           )}
         </BreadcrumbList>
       </Breadcrumb>
+
       <div className="p-6 container mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold">MESSAGES</h1>
-            <p className="text-gray-500">
-              Manage your conversations and send messages.
+            <h1 className="text-2xl font-bold text-black">MESSAGES</h1>
+            <p className="text-gray-400">
+              Manage your conversations and send messages
             </p>
           </div>
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-main hover:bg-second">
                 <Plus className="w-4 h-4 mr-2" />
@@ -280,37 +377,35 @@ const Messages = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New Chat</DialogTitle>
+                <DialogTitle>Start New Chat</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <Select onValueChange={handleStartChat}>
+                <Select
+                  onValueChange={(value) => {
+                    handleStartChat(value);
+                    setDialogOpen(false);
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select recipient" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockUsers
-                      .filter(
-                        (user) =>
-                          !activeUsers.some(
-                            (activeUser) => activeUser.id === user.id
-                          )
-                      )
-                      .map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={user.avatar} />
-                              <AvatarFallback>
-                                {user.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            {user.name}
-                          </div>
-                        </SelectItem>
-                      ))}
+                    {availableUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={user.avatar || undefined} />
+                            <AvatarFallback>
+                              {user.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          {user.name}
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -320,135 +415,146 @@ const Messages = () => {
 
         <div className="bg-neutral-700 rounded-lg h-[calc(100vh-200px)]">
           <div className="grid grid-cols-3 gap-6 h-full">
-            {/* Users List */}
-            <div className="col-span-1 border-r-2 border-neutral-800 p-6">
-              <div className="h-full flex flex-col">
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search messages..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {activeUsers
-                    .filter((user) =>
-                      user.name.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((user) => (
-                      <div
-                        key={user.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          selectedUser?.id === user.id
-                            ? "bg-neutral-800"
-                            : "hover:bg-neutral-800"
-                        }`}
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <Avatar>
-                              <AvatarImage src={user.avatar} />
-                              <AvatarFallback>
-                                {user.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div
-                              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-700 ${
-                                user.status === "online"
-                                  ? "bg-green-500"
-                                  : user.status === "away"
-                                  ? "bg-yellow-500"
-                                  : "bg-neutral-400"
-                              }`}
+            {/* Threads List */}
+            <div className="col-span-1 border-r border-neutral-600 p-6">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search messages..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2 overflow-y-auto h-[calc(100%-60px)]">
+                {loading ? (
+                  <div className="flex justify-center items-center h-full">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  </div>
+                ) : filteredThreads.length > 0 ? (
+                  filteredThreads.map((thread) => (
+                    <div
+                      key={thread.participant.id}
+                      className={`p-4 rounded-lg cursor-pointer transition-colors ${
+                        selectedThread?.participant.id === thread.participant.id
+                          ? "bg-neutral-600"
+                          : "hover:bg-neutral-600"
+                      }`}
+                      onClick={() => handleThreadSelection(thread)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Avatar>
+                            <AvatarImage
+                              src={thread.participant.avatar || undefined}
                             />
+                            <AvatarFallback>
+                              {thread.participant.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div
+                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-neutral-700 ${
+                              thread.participant.status === "online"
+                                ? "bg-green-500"
+                                : thread.participant.status === "away"
+                                ? "bg-yellow-500"
+                                : "bg-gray-500"
+                            }`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start">
+                            <p className="font-medium text-white truncate">
+                              {thread.participant.name}
+                              {thread.participant.unreadCount ? (
+                                <span className="ml-2 bg-main text-white text-xs px-2 py-1 rounded-full">
+                                  {thread.participant.unreadCount}
+                                </span>
+                              ) : null}
+                            </p>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  className="text-red-500"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteThread(thread.participant.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Chat
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium text-white truncate">
-                                {user.name}
-                                {user.unreadCount && (
-                                  <span className="bg-main text-white text-xs px-2 mx-2 py-1 rounded-full">
-                                    {user.unreadCount}
-                                  </span>
-                                )}
+                          {thread.lastMessage && (
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-sm text-gray-400 truncate">
+                                {thread.lastMessage.content}
                               </p>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0 hover:bg-neutral-700"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <MoreVertical className="h-4 w-4 text-white" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="">
-                                  <DropdownMenuItem
-                                    className="text-red-500"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteChat(user.id);
-                                    }}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Chat
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <span className="text-xs text-gray-500">
+                                {formatTimestamp(
+                                  thread.lastMessage.createdAt.toString()
+                                )}
+                              </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1 text-sm text-neutral-400">
-                                <Clock className="w-3 h-3" />
-                                <span>{user.lastActive}</span>
-                              </div>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-400 mt-4">
+                    No messages found
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Message Thread */}
-            <div className="col-span-2 p-6">
-              {selectedUser ? (
-                <div className="h-full flex flex-col">
-                  <div className="flex-1 overflow-y-auto">
-                    <div className="space-y-4">
-                      {currentThread.map((message) => {
-                        const isSentByMe = message.senderId === 0;
-                        return (
-                          <div
-                            key={message.id}
-                            className={`flex ${
-                              isSentByMe ? "justify-end" : "justify-start"
-                            }`}
-                          >
-                            <div
-                              className={`max-w-[70%] ${
-                                isSentByMe
-                                  ? "bg-main text-white"
-                                  : "bg-neutral-800 text-white"
-                              } rounded-lg p-3`}
-                            >
-                              <p>{message.content}</p>
-                              <p className="text-xs mt-1 opacity-70">
-                                {formatTimestamp(message.timestamp)}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+            {/* Messages */}
+            <div className="col-span-2 p-6 flex flex-col h-full">
+              {selectedThread ? (
+                <>
+                  <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+                    {selectedThread.messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${
+                          message.senderId === selectedThread.participant.id
+                            ? "justify-start"
+                            : "justify-end"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            message.senderId === selectedThread.participant.id
+                              ? "bg-neutral-600 text-white"
+                              : "bg-main text-white"
+                          }`}
+                        >
+                          <p>{message.content}</p>
+                          <p className="text-xs mt-1 opacity-70">
+                            {formatTimestamp(message.createdAt.toString())}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                  <div className="mt-4 flex gap-2">
+                  <div className="flex gap-2">
                     <Input
                       placeholder="Type a message..."
                       value={newMessage}
@@ -459,17 +565,23 @@ const Messages = () => {
                           handleSendMessage();
                         }
                       }}
+                      disabled={sending}
                     />
                     <Button
                       className="bg-main hover:bg-second"
                       onClick={handleSendMessage}
+                      disabled={sending}
                     >
-                      <Send className="w-4 h-4" />
+                      {sending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="h-full flex items-center justify-center text-neutral-400">
+                <div className="flex items-center justify-center h-full text-gray-400">
                   Select a conversation to start messaging
                 </div>
               )}
