@@ -215,14 +215,11 @@ export const TimeTableGrid: React.FC<TimeTableGridProps> = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-[240px] justify-start text-left font-normal",
-                        !selectedDate && "text-muted-foreground"
+                        "w-[240px] justify-start text-left font-normal"
                       )}
                     >
-                      <span>
-                        Week {format(weekStart, "d MMM")} -{" "}
-                        {format(weekEnd, "d MMM, yyyy")}
-                      </span>
+                      Week {format(weekStart, "d MMM")} -{" "}
+                      {format(weekEnd, "d MMM, yyyy")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">

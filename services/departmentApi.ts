@@ -20,7 +20,7 @@ export async function getDepartment(id: string): Promise<Department> {
 export async function createTeacher(
   departmentId: string,
   data: CreateTeacherRequest
-) {
+) { 
   const response = await fetch(`/api/departments/${departmentId}/teachers`, {
     method: "POST",
     headers: {
